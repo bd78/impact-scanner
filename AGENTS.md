@@ -1,5 +1,9 @@
 # impact-scanner
 
+
+
+
+
 Tkinter + OpenCV desktop app that detects bullet holes on target photos, measures
 group size and stores results in SQLite.
 
