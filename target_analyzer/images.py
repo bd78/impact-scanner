@@ -1,3 +1,4 @@
+# Author: bd78
 """Archive copies of the analysed photos next to the database.
 
 Every saved record gets its own JPEG in ``<db folder>/images/``, downscaled so the

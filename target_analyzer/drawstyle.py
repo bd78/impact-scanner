@@ -1,3 +1,4 @@
+# Author: bd78
 """How impacts and groups are drawn on the photo: colour, line style, width.
 
 Pure Python (no Tk): the UI turns a `LineStyle` into canvas options, the

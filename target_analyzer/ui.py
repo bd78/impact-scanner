@@ -1,3 +1,4 @@
+# Author: bd78
 """Tkinter user interface for the target analyser."""
 from __future__ import annotations
 

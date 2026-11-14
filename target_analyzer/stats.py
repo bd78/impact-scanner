@@ -1,3 +1,4 @@
+# Author: bd78
 """Group-size statistics. All physical values are in millimetres internally."""
 from __future__ import annotations
 

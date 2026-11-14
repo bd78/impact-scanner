@@ -1,3 +1,4 @@
+# Author: bd78
 r"""Run detection on the sample targets and write annotated images for review.
 
 Usage: .venv\Scripts\python tests\check_samples.py [out_dir]

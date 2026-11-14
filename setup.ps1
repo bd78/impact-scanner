@@ -1,3 +1,4 @@
+# Author: bd78
 # Creates the virtual environment (.venv) and installs the dependencies.
 # Usage:  .\setup.ps1
 $ErrorActionPreference = "Stop"

@@ -1,3 +1,4 @@
+# Author: bd78
 """Bullet-hole detection on printed paper targets (OpenCV).
 
 Two target styles are handled by one pipeline:

@@ -1,3 +1,4 @@
+# Author: bd78
 """SQLite persistence for analysed targets.
 
 One *session* is one photo (with its metadata and scale). A session holds one
