@@ -1,6 +1,6 @@
 # py-impact-scanner
 
-A Python based *impacts detector* and grouping measurement tool for shooting sports ethusiasts.
+A Python based *impacts detector* and grouping measurement tool for shooting sports enthusiasts.
 
 
 # Target impact analyser
