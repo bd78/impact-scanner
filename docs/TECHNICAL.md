@@ -60,14 +60,16 @@ py-detect-impact/
     ├── stats.py            group statistics, unit conversion – pure Python
     ├── db.py               SQLite persistence, aggregation, settings
     ├── images.py           stored photo copies in <db folder>/images/ (resize, JPEG, unique names, path resolution)
+    ├── export.py           CSV export of records for Excel (one row per group) – no Tk, no SQLite
     ├── drawstyle.py        display style of impacts and groups (colours, line styles, widths) – pure Python
     └── ui.py               Tkinter application (the only module that imports the others)
 ```
 
 Dependency direction: `ui.py` → `detection.py`, `hole_model.py`, `labels.py`,
-`stats.py`, `db.py`, `images.py`, `drawstyle.py`. The lower modules do not import each
-other except `db.py` → `stats.py` (for `GroupStats`, `summarize_groups`) and `db.py` →
-`images.py` (to delete orphaned copies and to derive source names during migration).
+`stats.py`, `db.py`, `images.py`, `export.py`, `drawstyle.py`. The lower modules do not
+import each other except `db.py` → `stats.py` (for `GroupStats`, `summarize_groups`),
+`db.py` → `images.py` (to delete orphaned copies and to derive source names during
+migration) and `export.py` → `stats.py` (`to_unit`).
 `detection.py` does not import `hole_model.py`: `detect_impacts` takes the network as a
 plain callable. Keep it that way: detection, hole_model, labels, stats, db, images and
 drawstyle must stay testable without a display. `training/train_hole_model.py` and
@@ -247,6 +249,21 @@ the UI maps it to the group index by position.
 `Database.aggregate(ids)` pools the **groups** of the given sessions and returns the
 `summarize_groups` dict plus `sessions` (number of sessions). A 25-diagram card thus
 weighs 25 times a single-group photo; the P90 is over groups.
+
+### 3.3.1 CSV export (`export.py`)
+
+`App.export_records` (button *Export to Excel (CSV)…* in Records & averages) exports
+the selected or all listed records. `export_rows(sessions, groups_of, db_path, unit,
+decimal)` builds a header and one row per `groups` row: record id, date (`shot_date`,
+else the date part of `created_at`), stored photo as an absolute path (relative
+`image_path` taken from the database folder; the original photo's path is never
+stored, only `source_name`), `source_name`, weapon, distance, ammo, group label,
+`n_shots`, width and height converted to the display unit with 2 decimals. A record
+without group rows gets one row with its session totals. `write_csv` writes UTF-8 with
+a BOM (Excel then reads accents correctly). `excel_separators()` reads the Windows list
+separator and decimal mark (`GetLocaleInfoEx`, `LOCALE_SLIST` / `LOCALE_SDECIMAL`)
+because Excel opens a CSV with them; elsewhere `,` and `.`. `safe_text` prefixes text
+starting with `= + - @ TAB CR` with `'` (CSV formula injection).
 
 ### 3.4 Stored photo copies (`images.py`)
 

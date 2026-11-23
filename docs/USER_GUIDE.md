@@ -300,6 +300,18 @@ diameter of its groups, in the current display unit.
 - **Delete selected**: removes the selected records after confirmation, together with
   their stored photo copies in `images\` when no other record uses them. This cannot
   be undone.
+- **Export to Excel (CSV)…**: writes the records to a `.csv` file that Excel opens with a
+  double-click. If some rows are selected, the app asks whether to export only those
+  (**Yes**) or every listed row (**No**); with no selection, every listed row is
+  exported (so a weapon filter applies). The file has **one row per group** with these
+  columns: record number, date (shot date, or the save date when it is empty), photo
+  (full path of the stored copy in `images\`, the picture the measures refer to), photo
+  name (the original file name), weapon, distance, ammo, group name, number of holes,
+  width and height of the group in the current display unit (named in the column
+  header). The separator and the decimal mark follow the Windows regional settings,
+  like Excel does (`;` and `,` on a French system), so the numbers stay numbers. A
+  text that starts with `=`, `+`, `-` or `@` is written with a leading `'` so Excel does
+  not run it as a formula.
 
 ## 6. Display parameters (Parameters tab)
 
