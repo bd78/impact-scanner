@@ -481,8 +481,10 @@ coordinates and circles scaled by `stored_factor`; passes a `store` callback so 
 is named with the new record id inside the save transaction), `_refresh_records` (the
 table has a *photo* column with `source_name`), `compute_average`
 (pooled group statistics: mean ± std and P90 in both cm and inch, independent of the
-display unit), `load_record` (restores groups and impacts, mapping `group_id` to the
-group position), `delete_records` (rows and orphaned stored copies, see
+display unit), `load_record` → `_load_record_id(sid)` (restores groups and impacts, mapping
+`group_id` to the group position; `open_image` also calls it, through
+`_offer_saved_record`, when `sessions_with_source` finds records for the chosen file
+name and the user accepts the latest one), `delete_records` (rows and orphaned stored copies, see
 `Database.delete_session`).
 
 **Zoom and pan.** `zoom` is relative to "fit to canvas" (1 = whole photo, clamped to

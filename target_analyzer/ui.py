@@ -373,7 +373,28 @@ class App(tk.Tk):
                        ("HEIC / HEIF", "*.heic *.heif"), ("All files", "*.*")])
         if not path:
             return
+        if self._offer_saved_record(Path(path).name):
+            return
         self._load_image(path)
+
+    def _offer_saved_record(self, name: str) -> bool:
+        """When a photo of this file name was already saved, offer to reopen its latest
+        record (stored copy, scale, groups and impacts). True if it was reopened."""
+        ids = self.db.sessions_with_source(name)
+        if not ids:
+            return False
+        s = self.db.get_session(ids[-1])
+        what = ", ".join(v for v in (s["shot_date"], s["weapon"], s["distance"]) if v)
+        more = (f"\n({len(ids)} records exist for this name; the latest is offered, the others are in "
+                "'Records & averages'.)") if len(ids) > 1 else ""
+        if not messagebox.askyesno(
+                "Open image", f"'{name}' was already analysed: record #{s['id']}"
+                              f"{' (' + what + ')' if what else ''}, {s['n_groups']} group(s), "
+                              f"{s['n_shots']} shots.{more}\n\nLoad that record with its groups and "
+                              "impacts?\n\nNo: start a new analysis of the photo."):
+            return False
+        self._load_record_id(s["id"])
+        return True
 
     def _load_image(self, path: str):
         img = load_image(path)
@@ -1161,7 +1182,11 @@ class App(tk.Tk):
         if len(ids) != 1:
             messagebox.showinfo("Load", "Select exactly one record.")
             return
-        s = self.db.get_session(ids[0])
+        self._load_record_id(ids[0])
+
+    def _load_record_id(self, sid: int):
+        """Restore a saved record: stored photo copy, scale, groups, impacts, form."""
+        s = self.db.get_session(sid)
         img_path = resolve_image_path(s["image_path"], self.db.path)
         if img_path is not None:
             self._load_image(str(img_path))
@@ -1173,19 +1198,21 @@ class App(tk.Tk):
         self.source_name = s["source_name"] or source_name_of(s["image_path"] or "")
         self.var_unit.set(s["unit"])
         self._set_scale(s["px_per_mm"], f"from record #{s['id']}")
-        rows = self.db.get_groups(ids[0])
+        rows = self.db.get_groups(sid)
         self.groups = [Group(r["label"], r["cx_px"], r["cy_px"], r["r_px"]) for r in rows]
         index_of = {r["id"]: i for i, r in enumerate(rows)}
         if not self.groups:
             self.groups = [Group("G1")]
         self.impacts = [Impact(r["x_px"], r["y_px"], 1, 0.0, bool(r["manual"]), -1,
-                               index_of.get(r["group_id"], 0)) for r in self.db.get_impacts(ids[0])]
+                               index_of.get(r["group_id"], 0)) for r in self.db.get_impacts(sid)]
         for k, e in self.form.items():
             e.delete(0, "end")
             e.insert(0, s[k] or "")
         self.update_stats()
         self._select_group(0)
         self.nb.select(self.tab_analyze)
+        self.lbl_status.config(text=f"Loaded record #{sid}: {len(self.groups)} group(s), "
+                                    f"{len(self.impacts)} impacts.")
 
     def delete_records(self):
         ids = self._selected_ids()
