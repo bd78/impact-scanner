@@ -92,6 +92,11 @@ with a tool active. Opening another photo returns to *fit*.
 Click **1. Open image…** and choose the photo. The file name and pixel size appear
 in the status line at the bottom right.
 
+If a photo with the same file name was already saved, the app asks whether to load that
+record: **Yes** reopens it with its scale, groups and shots (as **Load record** does, see
+section 5); **No** starts a new analysis of the photo. When several records exist for
+that name, the most recent one is offered; the others are in *Records & averages*.
+
 ### 4.2 Set the scale
 
 The app needs to know how many pixels make a centimetre. Two ways:
