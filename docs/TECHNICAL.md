@@ -442,8 +442,10 @@ display unit, default 5 cm, or in pixels without a scale), the *assign* click mo
 (`_unique_label`). The *add* mode adds to `cur_group`.
 
 Drawing (`redraw` → `_draw_group_overlay`, one call per group, the selected group
-last so it is on top): target circle with the label, box around the impacts with the
-centroid cross, then the impacts numbered within the group. Each element takes its
+last so it is on top): target circle, box around the impacts with the centroid cross,
+the impacts numbered within the group, and the group name above the top-left corner of
+the box, outside it, `GROUP_LABEL_GAP = 10` screen px up (the box of a single shot is
+its circle; a group without shots is labelled at the box of its target circle). Each element takes its
 colour, dash and width from `self.style` through `_line(key, group_index)`; the colour
 `"group"` resolves to `GROUP_COLOURS[i % n]`, a palette without red or yellow so the
 defaults stay distinct (impacts yellow `#ffff00` solid 2 px, hand-added impacts yellow

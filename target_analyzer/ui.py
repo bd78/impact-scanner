@@ -43,6 +43,7 @@ def tint(colour: str, amount: float) -> str:
     """Mix a #rrggbb colour with white (amount 0 = colour, 1 = white)."""
     r, g, b = (int(colour[i:i + 2], 16) for i in (1, 3, 5))
     return "#%02x%02x%02x" % tuple(round(c + (255 - c) * amount) for c in (r, g, b))
+GROUP_LABEL_GAP = 10     # screen px between a group's box and its name, written above its top-left corner
 CLICK_TOLERANCE_PX = 25  # screen pixels for the Remove / Assign tools (at least the circle radius)
 ZOOM_STEP = 1.25         # zoom factor per mouse-wheel notch or +/- press
 ZOOM_MAX = 40.0          # maximum zoom, relative to "fit to window"
@@ -599,16 +600,18 @@ class App(tk.Tk):
     def _draw_group_overlay(self, cv: tk.Canvas, gi: int, label: str,
                             circle: tuple[float, float, float] | None,
                             pts: list[tuple[float, float, bool]], selected: bool, r: float):
-        """Draw one group on a canvas, in canvas coordinates: target circle and label,
-        impacts (radius r) numbered within the group, box around the impacts and centre
-        cross. Used for the photo and for the preview of the Parameters tab."""
+        """Draw one group on a canvas, in canvas coordinates: target circle, impacts
+        (radius r) numbered within the group, box around the impacts and centre cross,
+        and the group name above the top-left corner of the box, outside it, at
+        GROUP_LABEL_GAP px. The box of a single shot is its circle; a group without shots
+        is labelled at the box of its target circle. Used for the photo and for the
+        preview of the Parameters tab."""
         col, w, kw = self._line("selected_circle" if selected else "group_circle", gi)
         bcol, bw, bkw = self._line("selected_box" if selected else "group_box", gi)
         font = ("", 11 if selected else 10, "bold")
         if circle is not None:
             x, y, rr = circle
             cv.create_oval(x - rr, y - rr, x + rr, y + rr, outline=col, width=w, **kw)
-            cv.create_text(x - rr + 4, y - rr + 4, text=label, fill=col, anchor="nw", font=font)
         if len(pts) > 1:
             xs, ys = [p[0] for p in pts], [p[1] for p in pts]
             cv.create_rectangle(min(xs) - r, min(ys) - r, max(xs) + r, max(ys) + r,
@@ -616,10 +619,15 @@ class App(tk.Tk):
             cx, cy = sum(xs) / len(xs), sum(ys) / len(ys)
             cv.create_line(cx - 8, cy, cx + 8, cy, fill=bcol, width=max(2, bw))
             cv.create_line(cx, cy - 8, cx, cy + 8, fill=bcol, width=max(2, bw))
-            if circle is None:
-                cv.create_text(min(xs) - r, min(ys) - r - 4, text=label, fill=bcol, anchor="sw", font=font)
-        elif len(pts) == 1 and circle is None:
-            cv.create_text(pts[0][0] + r + 2, pts[0][1], text=label, fill=col, anchor="w", font=font)
+        if pts:  # top-left corner of the box (of the circle of a single shot)
+            corner, lcol = (min(p[0] for p in pts) - r, min(p[1] for p in pts) - r), bcol
+        elif circle is not None:
+            corner, lcol = (circle[0] - circle[2], circle[1] - circle[2]), col
+        else:
+            corner = None
+        if corner is not None:
+            cv.create_text(corner[0], corner[1] - GROUP_LABEL_GAP, text=label, fill=lcol,
+                           anchor="sw", font=font)
         for k, (x, y, manual) in enumerate(pts, 1):
             icol, iw, ikw = self._line("impact_manual" if manual else "impact", gi)
             cv.create_oval(x - r, y - r, x + r, y + r, outline=icol, width=iw, **ikw)
