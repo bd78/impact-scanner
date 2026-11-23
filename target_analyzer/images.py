@@ -20,10 +20,29 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from PIL import Image, ImageOps
+
+try:  # HEIC / HEIF (iPhone photos) support is optional
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+    HEIF_OK = True
+except ImportError:  # pragma: no cover
+    HEIF_OK = False
 
 MAX_SIDE = 2500          # longest side of the stored copy, in pixels
 JPEG_QUALITY = 80        # 0-100; 80 keeps holes and ring edges crisp at a fraction of the size
 IMAGES_DIR = "images"
+
+
+def load_image(path: str | Path) -> np.ndarray | None:
+    """Read any common photo format (JPEG, PNG, HEIC, WebP, AVIF, ...) as a BGR array,
+    honouring the EXIF rotation. None if the file cannot be read."""
+    try:
+        with Image.open(path) as im:
+            im = ImageOps.exif_transpose(im).convert("RGB")
+            return cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2BGR)
+    except Exception:
+        return None
 
 
 def _safe_stem(name: str) -> str:

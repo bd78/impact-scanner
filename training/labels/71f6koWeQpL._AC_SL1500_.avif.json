@@ -1,0 +1,16 @@
+{
+ "image": "samples/71f6koWeQpL._AC_SL1500_.avif",
+ "width": 1500,
+ "height": 1500,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 12.0,
+ "holes": [
+  {"x": 888.0, "y": 365.0, "r": null},
+  {"x": 712.2, "y": 537.1, "r": 12.9},
+  {"x": 1272.9, "y": 604.5, "r": 13.8},
+  {"x": 830.8, "y": 693.2, "r": 9.9},
+  {"x": 1030.0, "y": 693.0, "r": null},
+  {"x": 941.0, "y": 982.0, "r": null}
+ ],
+ "ignore": []
+}

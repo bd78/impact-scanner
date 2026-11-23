@@ -4,3 +4,7 @@ __pycache__/
 tests/out/
 images/
 target/
+.venv-train/
+# new sample photos stay local (stock images, not ours to publish); files already
+# tracked in samples/ stay tracked. Use "git add -f" for a photo you own.
+samples/*

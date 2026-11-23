@@ -81,6 +81,152 @@ class DetectionResult:
 
 WORK_SIZE = 1920  # longest image side used for detection; parameters are tuned for it
 
+# --- backing colour picked by the user -----------------------------------------
+# A hole shows whatever is behind the paper (cardboard, wood, foam, a black board).
+# The user clicks inside a few holes; each click samples a DISC of pixels, so the
+# texture of the backing (wood grain, cardboard fibres, JPEG noise) is captured as a
+# colour distribution, not a single pixel value. A pixel matches when its Mahalanobis
+# distance to one of the samples is below the tolerance (in standard deviations).
+# Minimum spread (std-dev, OpenCV 8-bit Lab units) added to every sample. Lightness gets
+# much more than the colour axes: the light changes across a photo (shadow, lit side of a
+# hole) while the hue of the backing does not; it also keeps the covariance invertible for
+# a flat colour (vector drawing). Tuned on 9 labelled photos where the colour rules fail:
+# (L, a, b) = (4, 4, 4) -> F1 0.33, (16, 5, 5) -> 0.39, (20-30, 5-6, 5-6) -> 0.40-0.41,
+# (16, 8, 8) -> 0.31 (with "use only this colour").
+BACKING_MIN_STD = (20.0, 5.0, 5.0)
+BACKING_KEEP = 0.8        # share of the disc pixels kept (the rest is torn edge / print)
+BACKING_PRINT_SHARE = 0.5  # a sample matching more of a solid print area than this is the print
+BACKING_PRINT_MIN = 0.005  # smallest print area (share of the image) checked for that, any shape;
+                           # 13 photos, 'only this colour': F1 0.52 (disc only), 0.51 (2 %), 0.55 (0.5 %)
+BACKING_DEFAULT_TOL = 3.0
+
+
+@dataclass
+class BackingSample:
+    """Colour distribution (CIE Lab, OpenCV 8-bit scale) of a disc sampled inside a hole."""
+    mean: tuple[float, float, float]
+    cov: tuple[tuple[float, float, float], ...]  # 3 x 3, regularised
+    n: int = 0                                    # pixels used
+
+    @property
+    def rgb_hex(self) -> str:
+        lab = np.array([[self.mean]], np.float32).clip(0, 255).astype(np.uint8)
+        b, g, r = cv2.cvtColor(lab, cv2.COLOR_Lab2BGR)[0, 0]
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    def to_dict(self) -> dict:
+        return {"mean": [round(v, 3) for v in self.mean],
+                "cov": [[round(v, 4) for v in row] for row in self.cov], "n": self.n}
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "BackingSample | None":
+        try:
+            mean = tuple(float(v) for v in d["mean"])
+            cov = tuple(tuple(float(v) for v in row) for row in d["cov"])
+            if len(mean) != 3 or len(cov) != 3 or any(len(r) != 3 for r in cov):
+                return None
+            np.linalg.inv(np.array(cov))  # must be invertible
+            return cls(mean, cov, int(d.get("n", 0)))
+        except (KeyError, TypeError, ValueError, np.linalg.LinAlgError):
+            return None
+
+
+def _work_scale(shape) -> float:
+    return min(1.0, WORK_SIZE / max(shape[:2]))
+
+
+def sample_backing(image_bgr: np.ndarray, x: float, y: float, radius: float) -> BackingSample | None:
+    """Colour distribution of the disc of `radius` px centred on (x, y) (original pixels).
+
+    The pixels are processed exactly as in detect_impacts (work resolution, 5 px
+    median) so the statistics match what the detector sees. The estimate is
+    robust: the BACKING_KEEP closest pixels to the median are kept, so a disc
+    that overlaps the torn edge or the print still describes the backing.
+    """
+    H, W = image_bgr.shape[:2]
+    s = _work_scale(image_bgr.shape)
+    m = int(np.ceil(radius + 12 / s))  # margin for the median filter
+    x0, y0, x1, y1 = max(0, int(x - m)), max(0, int(y - m)), min(W, int(x + m) + 1), min(H, int(y + m) + 1)
+    if x1 - x0 < 3 or y1 - y0 < 3:
+        return None
+    crop = image_bgr[y0:y1, x0:x1]
+    if s < 1.0:
+        crop = cv2.resize(crop, (max(3, round(crop.shape[1] * s)), max(3, round(crop.shape[0] * s))),
+                          interpolation=cv2.INTER_AREA)
+    crop = cv2.medianBlur(crop, 5)
+    lab = cv2.cvtColor(crop, cv2.COLOR_BGR2Lab).reshape(-1, 3).astype(np.float64)
+    yy, xx = np.mgrid[0:crop.shape[0], 0:crop.shape[1]]
+    cx, cy = (x - x0) * s, (y - y0) * s
+    inside = ((xx - cx) ** 2 + (yy - cy) ** 2 <= max(1.0, radius * s) ** 2).ravel()
+    px = lab[inside]
+    if len(px) < 3:
+        return None
+    centre = np.median(px, axis=0)
+    for _ in range(2):  # trimmed estimate: drop the pixels farthest from the centre
+        d = np.linalg.norm(px - centre, axis=1)
+        keep = px[d <= np.quantile(d, BACKING_KEEP)] if len(px) > 10 else px
+        centre = keep.mean(axis=0)
+    cov = np.cov(keep.T) if len(keep) > 3 else np.zeros((3, 3))
+    cov = cov + np.diag(np.square(BACKING_MIN_STD))
+    return BackingSample(tuple(float(v) for v in centre), tuple(tuple(float(v) for v in r) for r in cov),
+                         int(len(keep)))
+
+
+def backing_match(lab: np.ndarray, samples: list[BackingSample], tol: float = BACKING_DEFAULT_TOL) -> np.ndarray:
+    """Boolean mask of the pixels of a Lab image (H x W x 3) within `tol` std-devs of any sample."""
+    out = np.zeros(lab.shape[:2], bool)
+    if not samples:
+        return out
+    lab = lab.astype(np.float32)
+    for smp in samples:
+        inv = np.linalg.inv(np.array(smp.cov, np.float64)).astype(np.float32)
+        diff = lab - np.array(smp.mean, np.float32)
+        d2 = np.einsum("...i,ij,...j->...", diff, inv, diff, optimize=True)
+        out |= d2 < tol * tol
+    return out
+
+
+def backing_match_image(image_bgr: np.ndarray, samples: list[BackingSample],
+                        tol: float = BACKING_DEFAULT_TOL) -> np.ndarray:
+    """backing_match on a whole photo, at work resolution (for a preview overlay)."""
+    s = _work_scale(image_bgr.shape)
+    if s < 1.0:
+        H, W = image_bgr.shape[:2]
+        image_bgr = cv2.resize(image_bgr, (int(W * s), int(H * s)), interpolation=cv2.INTER_AREA)
+    lab = cv2.cvtColor(cv2.medianBlur(image_bgr, 5), cv2.COLOR_BGR2Lab)
+    return backing_match(lab, samples, tol)
+
+
+def _drop_print_matches(backing_px: np.ndarray, ink: np.ndarray, disc_inside: np.ndarray | None,
+                        h: int, w: int) -> None:
+    """Remove (in place) the background-colour matches that are really print.
+
+    When the picked colour is the colour of the print (black board behind black
+    print), every printed area matches. Holes cannot be told from print there by
+    colour, so a large solid print area mostly covered by the match is left to the
+    other rules, whatever its shape: disc, band, silhouette, square. Print areas are
+    the connected ink regions after an opening that erases lines, digits and the
+    holes themselves, at least BACKING_PRINT_MIN of the image; the solid disc found
+    by find_disc counts as one area.
+    """
+    if disc_inside is not None and backing_px[disc_inside].mean() > BACKING_PRINT_SHARE:
+        backing_px &= ~disc_inside
+    k = _odd(0.012 * max(h, w))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    thick = cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_OPEN, kernel)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(thick, connectivity=8)
+    for i in range(1, n):
+        if stats[i, cv2.CC_STAT_AREA] < BACKING_PRINT_MIN * h * w:
+            continue
+        x, y, bw, bh = stats[i, :4]
+        if backing_px[y:y + bh, x:x + bw][labels[y:y + bh, x:x + bw] == i].mean() <= BACKING_PRINT_SHARE:
+            continue
+        # the opening shaved the outline of the area: widen it by the same kernel so
+        # its anti-aliased edge and thin protrusions go too
+        x0, y0, x1, y1 = max(0, x - k), max(0, y - k), min(w, x + bw + k), min(h, y + bh + k)
+        comp = cv2.dilate((labels[y0:y1, x0:x1] == i).astype(np.uint8), kernel) > 0
+        backing_px[y0:y1, x0:x1][comp] = False
+
 
 def _odd(v: float) -> int:
     v = int(round(v))
@@ -198,6 +344,11 @@ def detect_impacts(
     shots_fired: int | None = None,
     hole_area_hint: float | None = None,
     ink_ratio: float = 0.45,
+    backing: list[BackingSample] | None = None,
+    backing_tol: float = BACKING_DEFAULT_TOL,
+    backing_only: bool = False,
+    hole_model=None,
+    use_rules: bool = True,
 ) -> DetectionResult:
     """Detect bullet holes in a target photo.
 
@@ -214,7 +365,16 @@ def detect_impacts(
     hole_area_hint: expected area (px^2, original image) of the bright/grey
         core of a single hole (the UI derives it from the scale and a hole
         diameter); defaults to the median of the smaller half of the blobs.
+    backing: colour samples taken inside holes (sample_backing). Pixels within
+        backing_tol standard deviations of a sample are hole pixels, added to
+        the rules above, or replacing them when backing_only is true.
+    hole_model: optional trained network (hole_model.HoleNet, or any callable
+        (image_bgr, hole_radius_px) -> hits with x, y, score in original pixels).
+        With use_rules=False only the network finds the holes; otherwise its hits
+        are merged with the rule-based impacts (a rule impact closer than one hole
+        radius to a network hit is the same hole and is dropped).
     """
+    original = image_bgr
     H, W = image_bgr.shape[:2]
     scale = 1.0
     if max(H, W) > WORK_SIZE:
@@ -255,6 +415,7 @@ def detect_impacts(
     coloured = (sat > sat_thresh) & (gray < 0.9 * paper_global) & ~ink
     cand = midtone | coloured
 
+    inside = None
     if disc is not None and disc.solid:
         inside = np.zeros_like(gray)
         cv2.circle(inside, (int(disc.cx), int(disc.cy)), int(disc.r * 0.96), 255, -1)
@@ -263,6 +424,14 @@ def detect_impacts(
         # and take bright (torn paper) pixels instead
         cand &= ~inside
         cand |= inside & ((gray > 0.65 * paper_global) | coloured)
+
+    # backing colour picked by the user: not excluded by the ink mask, since a dark
+    # backing behind white paper is exactly what the ink rule hides
+    backing_px = None
+    if backing:
+        backing_px = backing_match(cv2.cvtColor(blur_bgr, cv2.COLOR_BGR2Lab), backing, backing_tol)
+        _drop_print_matches(backing_px, ink, inside, h, w)
+        cand = backing_px if backing_only else (cand | backing_px)
 
     mask = cand.astype(np.uint8) * 255
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE,
@@ -283,14 +452,37 @@ def detect_impacts(
         hull = cv2.contourArea(cv2.convexHull(c))
         return hull <= 0 or area / hull >= 0.2  # thin arcs/strips (shadow edges) are not holes
 
-    blobs = [c for c in cnts if keep(c)]
+    blobs = [c for c in cnts if keep(c)] if use_rules else []
     debug = {"ink": ink, "midtone": midtone, "coloured": coloured, "candidates": opened > 0}
+    if backing_px is not None:
+        debug["backing"] = backing_px
     if disc is not None:
         disc = Disc(disc.cx / scale, disc.cy / scale, disc.r / scale, disc.solid)
     targets = [Disc(t.cx / scale, t.cy / scale, t.r / scale, t.solid) for t in targets]
-    if not blobs:
-        return DetectionResult(disc, [], [], 0.0, debug, targets, assign_groups([], targets))
+    impacts, single = _rule_impacts(blobs, scale, hole_area_hint, shots_fired)
+    blobs = [(c / scale).astype(np.int32) for c in blobs]
+    if hole_model is not None:
+        r_hint = float(np.sqrt(hole_area_hint / np.pi)) if hole_area_hint else None
+        hits = hole_model(original, r_hint)
+        if shots_fired and not use_rules and len(hits) > shots_fired:
+            # torn regions often give several peaks: keep the strongest, as many as shots
+            hits = sorted(hits, key=lambda hit: -hit.score)[:shots_fired]
+        r_same = float(np.sqrt(single / np.pi)) if single else (r_hint or max(H, W) / 150.0)
+        net = [Impact(float(hit.x), float(hit.y), 1, np.pi * r_same ** 2, False, -1) for hit in hits]
+        impacts = net + [i for i in impacts
+                         if all(np.hypot(i.x - n.x, i.y - n.y) > r_same for n in net)]
+        if not single and hole_area_hint:
+            single = float(hole_area_hint)
+    groups = assign_groups(impacts, targets)
+    return DetectionResult(disc, impacts, blobs, single, debug, targets, groups)
 
+
+def _rule_impacts(blobs, scale: float, hole_area_hint, shots_fired) -> tuple[list[Impact], float]:
+    """Impacts from the hole blobs (work resolution): torn blobs are split into the
+    estimated shot count. Returns the impacts and the single-hole area, both in
+    original pixels."""
+    if not blobs:
+        return [], 0.0
     areas = np.array([cv2.contourArea(c) for c in blobs])
     if hole_area_hint:
         single = float(hole_area_hint) * scale ** 2
@@ -325,6 +517,4 @@ def detect_impacts(
         for (x, y) in _split_blob(c, int(n)):
             impacts.append(Impact(x / scale, y / scale, 1, float(a) / n / scale ** 2, False,
                                   bid if n > 1 else -1))
-    blobs = [(c / scale).astype(np.int32) for c in blobs]
-    groups = assign_groups(impacts, targets)
-    return DetectionResult(disc, impacts, blobs, single / scale ** 2, debug, targets, groups)
+    return impacts, single / scale ** 2

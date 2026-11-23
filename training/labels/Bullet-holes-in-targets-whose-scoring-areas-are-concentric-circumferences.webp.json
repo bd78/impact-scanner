@@ -1,0 +1,16 @@
+{
+ "image": "samples/Bullet-holes-in-targets-whose-scoring-areas-are-concentric-circumferences.webp",
+ "width": 336,
+ "height": 252,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 4.0,
+ "holes": [
+  {"x": 129.0, "y": 70.0, "r": null},
+  {"x": 229.0, "y": 101.0, "r": null},
+  {"x": 162.0, "y": 118.0, "r": null},
+  {"x": 68.0, "y": 140.0, "r": null},
+  {"x": 127.0, "y": 137.0, "r": null},
+  {"x": 215.0, "y": 155.0, "r": null}
+ ],
+ "ignore": []
+}

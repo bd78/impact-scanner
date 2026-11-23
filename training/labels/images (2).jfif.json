@@ -1,0 +1,9 @@
+{
+ "image": "samples/images (2).jfif",
+ "width": 192,
+ "height": 128,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "exclude": "192x128 thumbnail, ~70 holes of 2-3 px",
+ "holes": [],
+ "ignore": []
+}

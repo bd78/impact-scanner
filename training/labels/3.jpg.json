@@ -1,0 +1,25 @@
+{
+ "image": "samples/3.jpg",
+ "width": 1440,
+ "height": 1920,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 14.0,
+ "holes": [
+  {"x": 768.0, "y": 774.0, "r": null},
+  {"x": 838.0, "y": 848.0, "r": null},
+  {"x": 795.0, "y": 868.0, "r": null},
+  {"x": 936.0, "y": 848.0, "r": null},
+  {"x": 696.0, "y": 887.0, "r": null},
+  {"x": 786.0, "y": 969.0, "r": null},
+  {"x": 649.0, "y": 1005.0, "r": null},
+  {"x": 891.0, "y": 1048.0, "r": null},
+  {"x": 646.0, "y": 1075.0, "r": null},
+  {"x": 553.0, "y": 1106.0, "r": null},
+  {"x": 815.0, "y": 1087.0, "r": null},
+  {"x": 776.0, "y": 1134.0, "r": null},
+  {"x": 885.0, "y": 1126.0, "r": null},
+  {"x": 909.0, "y": 1204.0, "r": null},
+  {"x": 777.0, "y": 1286.0, "r": null}
+ ],
+ "ignore": []
+}

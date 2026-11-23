@@ -1,0 +1,12 @@
+# Training of the hole-detection network (training/train_hole_model.py) only.
+# The application itself needs requirements.txt alone. Use a separate environment:
+#   py -3.11 -m venv .venv-train
+#   .venv-train\Scripts\python -m pip install -r requirements-train.txt
+# For an NVIDIA GPU install torch from the CUDA index first, for example:
+#   .venv-train\Scripts\python -m pip install torch --index-url https://download.pytorch.org/whl/cu130
+torch>=2.4
+onnx>=1.16
+opencv-python-headless>=4.9
+numpy>=1.26
+pillow>=11.2
+pillow-heif>=0.16

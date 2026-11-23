@@ -2,6 +2,9 @@
 """Tkinter user interface for the target analyser."""
 from __future__ import annotations
 
+import filecmp
+import json
+import shutil
 import tkinter as tk
 from datetime import date
 from math import ceil, exp, floor, hypot, log, pi
@@ -10,30 +13,32 @@ from tkinter import colorchooser, filedialog, messagebox, simpledialog, ttk
 
 import cv2
 import numpy as np
-from PIL import Image, ImageOps, ImageTk
-
-try:  # HEIC / HEIF (iPhone photos) support is optional
-    import pillow_heif
-    pillow_heif.register_heif_opener()
-    HEIF_OK = True
-except ImportError:  # pragma: no cover
-    HEIF_OK = False
+from PIL import Image, ImageTk
 
 from .db import Database, GroupRecord
-from .detection import Group, Impact, assign_groups, detect_impacts, find_disc, find_targets
+from .detection import (BACKING_DEFAULT_TOL, BackingSample, Group, Impact, assign_groups,
+                        backing_match_image, detect_impacts, find_disc, find_targets, sample_backing)
 from .drawstyle import (ELEMENTS, GROUP_COLOUR, IMPACT_SIZE_RANGE, LINE_STYLES, WIDTH_RANGE,
                         DrawStyle)
-from .images import resolve_image_path, source_name_of, store_image, stored_factor
+from .hole_model import MODEL_PATH, HoleNet, model_available
+from .images import HEIF_OK, load_image, resolve_image_path, source_name_of, store_image, stored_factor
+from .labels import IMAGES_DIR, label_path, save_label
 from .stats import GroupStats, cluster_points, from_unit, group_stats, summarize_groups, to_unit
 
 UNITS = ("cm", "inch")
 DEFAULT_DISC_MM = 200.0  # black disc of a 25 m precision pistol target
 DEFAULT_CLUSTER_MM = 50.0  # "Auto-group by distance": shots closer than this belong together
-IMAGE_EXTS = "*.jpg *.jpeg *.jpe *.png *.heic *.heif *.bmp *.tif *.tiff *.webp"
+IMAGE_EXTS = "*.jpg *.jpeg *.jpe *.jfif *.png *.heic *.heif *.avif *.bmp *.tif *.tiff *.webp"
 # group palette: no red (the selected group) and no yellow (the impacts, by default)
 GROUP_COLOURS = ("#20a0ff", "#30d030", "#e040e0", "#00d0d0", "#8080ff", "#a0ff40",
                  "#40e0a0", "#c080ff", "#80c0ff", "#ff70ff")
 STYLE_SETTING = "draw_style"  # settings key of the display style (JSON)
+BACKING_SETTING = "backing_samples"  # settings key: hole background colour samples (JSON list)
+DETECTOR_SETTING = "detector"        # settings key: last detector chosen
+DETECTORS = ("Colour rules", "Neural network", "Both")
+BACKING_OVERLAY = (255, 0, 255)      # colour of the "matching pixels" overlay
+MAX_SWATCHES = 7                     # background samples shown as swatches (the rest as "+n")
+BACKING_WARN_SHARE = 0.2             # warn when one picked colour matches more of the photo than this
 # background colour of each tab name (full colour when selected, a light tint otherwise)
 TAB_COLOURS = {"Analyse": "#2f6db3", "Records & averages": "#2e8b57", "Parameters": "#c96f1e"}
 TAB_TINT = 0.7  # share of white mixed into the colour of an unselected tab
@@ -46,16 +51,6 @@ def tint(colour: str, amount: float) -> str:
 CLICK_TOLERANCE_PX = 25  # screen pixels for the Remove / Assign tools (at least the circle radius)
 ZOOM_STEP = 1.25         # zoom factor per mouse-wheel notch or +/- press
 ZOOM_MAX = 40.0          # maximum zoom, relative to "fit to window"
-
-
-def load_image(path: str) -> np.ndarray | None:
-    """Read any common photo format (incl. HEIC) as a BGR array, honouring EXIF rotation."""
-    try:
-        with Image.open(path) as im:
-            im = ImageOps.exif_transpose(im).convert("RGB")
-            return cv2.cvtColor(np.asarray(im), cv2.COLOR_RGB2BGR)
-    except Exception:
-        return None
 
 
 def group_colour(index: int) -> str:
@@ -128,6 +123,12 @@ class App(tk.Tk):
         self.disc = None
         self.group_stats: dict[int, GroupStats] = {}  # group index -> stats (needs the scale)
         self.summary: dict = {}
+        self.single_hole_area = 0.0  # from the last detection, original px
+        # background seen through the holes, sampled by the user (kept between photos)
+        self.backing: list[BackingSample] = self._load_backing()
+        self.backing_mask: Image.Image | None = None  # matching pixels ("L", detection resolution)
+        self.backing_mask_k = 1.0                     # mask pixels per photo pixel
+        self._hole_net: HoleNet | None = None         # trained network, loaded on first use
 
         self._build()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -230,6 +231,18 @@ class App(tk.Tk):
                                         ("Shots fired (opt.)", self.var_shots))):
             ttk.Label(grid, text=txt).grid(row=r, column=0, sticky="w")
             ttk.Entry(grid, textvariable=var, width=7).grid(row=r, column=1, padx=3, pady=1)
+        self._build_backing(left)
+        drow = ttk.Frame(left)
+        drow.pack(fill="x", pady=(4, 0))
+        ttk.Label(drow, text="Detector").pack(side="left")
+        saved = self.db.get_setting(DETECTOR_SETTING)
+        self.var_detector = tk.StringVar(value=saved if saved in DETECTORS and model_available() else DETECTORS[0])
+        cb = ttk.Combobox(drow, textvariable=self.var_detector, values=DETECTORS, state="readonly", width=15)
+        cb.pack(side="left", padx=4)
+        cb.bind("<<ComboboxSelected>>", lambda e: self._detector_changed())
+        self.lbl_model = ttk.Label(left, text=self._model_info(), foreground="#666", wraplength=200,
+                                   justify="left")
+        self.lbl_model.pack(anchor="w")
         ttk.Button(left, text="Analyse impacts", command=self.analyze).pack(fill="x", pady=4)
         ttk.Label(left, text="Correct manually:").pack(anchor="w")
         ttk.Button(left, text="Add impact (click)", command=lambda: self.set_mode("add")).pack(fill="x", pady=1)
@@ -237,6 +250,7 @@ class App(tk.Tk):
         ttk.Button(left, text="Move impact to selected group (click)",
                    command=lambda: self.set_mode("assign")).pack(fill="x", pady=1)
         ttk.Button(left, text="Clear all impacts", command=self.clear_impacts).pack(fill="x", pady=1)
+        ttk.Button(left, text="Save as training label", command=self.save_training_label).pack(fill="x", pady=1)
         self.lbl_mode = ttk.Label(left, text="", foreground="blue", wraplength=190)
         self.lbl_mode.pack(anchor="w", pady=4)
 
@@ -313,6 +327,8 @@ class App(tk.Tk):
         self.lbl_status.pack(anchor="w")
 
         self.canvas.bind("<Configure>", lambda e: self.redraw())
+        self.canvas.bind("<Motion>", self._on_motion)  # sampling disc under the cursor
+        self.canvas.bind("<Leave>", lambda e: self.canvas.delete("brush"))
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.bind("<B1-Motion>", self._pan_move)
         self.canvas.bind("<ButtonRelease-1>", self._pan_end)
@@ -397,9 +413,10 @@ class App(tk.Tk):
         self.disc = None
         self.set_mode(None)
         self.lbl_scale.config(text="scale: not set", foreground="red")
+        self.single_hole_area = 0.0
         self.lbl_status.config(text=f"Loaded {Path(path).name} ({img.shape[1]}x{img.shape[0]} px)")
         self.update_stats()
-        self.redraw()
+        self._backing_changed()  # recomputes the overlay for this photo and redraws
 
     # ---------------------------------------------------------- coordinates
     def _to_view(self, x, y):
@@ -556,8 +573,12 @@ class App(tk.Tk):
             sx, sy = round(ox + x0 * s), round(oy + y0 * s)
             w, h = max(1, round(ox + x1 * s) - sx), max(1, round(oy + y1 * s) - sy)
             resample = Image.NEAREST if s >= 4 else Image.BILINEAR  # crisp pixels when far in
-            self.tk_image = ImageTk.PhotoImage(
-                self.pil_image.resize((w, h), resample, box=(x0, y0, x1, y1)))
+            region = self.pil_image.resize((w, h), resample, box=(x0, y0, x1, y1))
+            if self.backing_mask is not None and self.var_show_backing.get():
+                k = self.backing_mask_k
+                alpha = self.backing_mask.resize((w, h), Image.NEAREST, box=(x0 * k, y0 * k, x1 * k, y1 * k))
+                region = Image.composite(Image.new("RGB", (w, h), BACKING_OVERLAY), region, alpha)
+            self.tk_image = ImageTk.PhotoImage(region)
             self.canvas.create_image(sx, sy, anchor="nw", image=self.tk_image)
         self.lbl_zoom.config(text="Zoom: fit" if self.zoom == 1.0 else f"Zoom: ×{self.zoom:.1f}")
         self.var_zoom.set(log(self.zoom))  # setting the variable does not fire the slider command
@@ -897,6 +918,9 @@ class App(tk.Tk):
             "add": f"Click on the image to add an impact to group '{label}'. (Pick another tool to stop.)",
             "remove": "Click on an impact to remove it.",
             "assign": f"Click on an impact to move it to group '{label}'. Select another group in the list to change the destination.",
+            "backing": "Click inside a hole, on the background seen through it (zoom in first). "
+                       "The magenta circle is the sampled disc; its texture is kept, not just one "
+                       "pixel. Sample a few holes if the light is uneven.",
         }
         self.lbl_mode.config(text=hints.get(mode, ""))
         if mode == "scale":
@@ -952,6 +976,8 @@ class App(tk.Tk):
                 self.impacts[i].group = self._ensure_group()
                 self.update_stats()
                 self.redraw()
+        elif self.mode == "backing":
+            self._add_backing_sample(x, y)
 
     def _set_scale(self, px_per_mm: float, how: str):
         self.px_per_mm = px_per_mm
@@ -989,19 +1015,37 @@ class App(tk.Tk):
                 hint = pi * (self.var_hole.get() * self.px_per_mm / 2) ** 2
             except tk.TclError:
                 hint = None
+        detector = self.var_detector.get()
+        net = None
+        if detector != DETECTORS[0]:
+            net = self._get_hole_net()
+            if net is None:
+                return
+        self.config(cursor="watch")
+        self.update_idletasks()
         try:
             result = detect_impacts(self.image_bgr, paper_ratio=self.var_paper.get() / 100.0,
                                     sat_thresh=self.var_sat.get(), open_kernel=self.var_kernel.get(),
                                     min_area=self.var_minarea.get(), shots_fired=shots_fired,
-                                    hole_area_hint=hint)
+                                    hole_area_hint=hint,
+                                    backing=(self.backing or None) if detector != "Neural network" else None,
+                                    backing_tol=self._backing_tol(),
+                                    backing_only=bool(self.var_backing_only.get()),
+                                    hole_model=net, use_rules=detector != "Neural network")
         except Exception as exc:  # parameters out of range, etc.
             messagebox.showerror("Analyse", str(exc))
             return
+        finally:
+            self.config(cursor="")
         self.disc = result.disc
         self.impacts = result.impacts
         self.groups = result.groups
+        self.single_hole_area = result.single_hole_area
         n_multi = len({i.blob_id for i in self.impacts if i.blob_id >= 0})
-        msg = f"Detected {len(self.impacts)} impacts"
+        msg = f"Detected {len(self.impacts)} impacts ({detector.lower()}"
+        if self.backing and detector != "Neural network":
+            msg += f", {len(self.backing)} background colour(s)"
+        msg += ")"
         if len(result.targets) >= 2:
             msg += f" on {len(result.targets)} target diagrams ({len(self.groups)} groups)"
         if n_multi:
@@ -1018,6 +1062,202 @@ class App(tk.Tk):
         self.impacts = []
         self.update_stats()
         self.redraw()
+
+    # --------------------------------------------------- hole background colour
+    def _build_backing(self, parent):
+        box = ttk.LabelFrame(parent, text="Hole background colour", padding=4)
+        box.pack(fill="x", pady=(6, 0))
+        ttk.Button(box, text="Pick in a hole (click)", command=lambda: self.set_mode("backing")).pack(fill="x")
+        row = ttk.Frame(box)
+        row.pack(fill="x", pady=3)
+        self.swatch_bar = ttk.Frame(row)
+        self.swatch_bar.pack(side="left", fill="x", expand=True)
+        ttk.Button(row, text="Clear", width=6, command=self.clear_backing).pack(side="right")
+        grid = ttk.Frame(box)
+        grid.pack(fill="x")
+        self.var_backing_r = tk.StringVar(value="10")
+        self.var_backing_tol = tk.StringVar(value=f"{BACKING_DEFAULT_TOL:g}")
+        ttk.Label(grid, text="Disc radius (screen px)").grid(row=0, column=0, sticky="w")
+        ttk.Spinbox(grid, from_=2, to=60, textvariable=self.var_backing_r, width=5).grid(row=0, column=1, padx=3)
+        ttk.Label(grid, text="Tolerance (σ)").grid(row=1, column=0, sticky="w")
+        sp = ttk.Spinbox(grid, from_=1.0, to=8.0, increment=0.5, textvariable=self.var_backing_tol, width=5,
+                         command=self._backing_changed)
+        sp.grid(row=1, column=1, padx=3, pady=1)
+        sp.bind("<Return>", lambda e: self._backing_changed())
+        sp.bind("<FocusOut>", lambda e: self._backing_changed())
+        self.var_backing_only = tk.BooleanVar(value=False)
+        ttk.Checkbutton(box, text="Use only this colour", variable=self.var_backing_only).pack(anchor="w")
+        self.var_show_backing = tk.BooleanVar(value=False)
+        ttk.Checkbutton(box, text="Show matching pixels", variable=self.var_show_backing,
+                        command=self._backing_changed).pack(anchor="w")
+        self._update_swatches()
+
+    def _load_backing(self) -> list[BackingSample]:
+        try:
+            data = json.loads(self.db.get_setting(BACKING_SETTING) or "[]")
+        except ValueError:
+            return []
+        if not isinstance(data, list):
+            return []
+        samples = [BackingSample.from_dict(d) for d in data if isinstance(d, dict)]
+        return [smp for smp in samples if smp is not None]
+
+    def _save_backing(self):
+        self.db.set_setting(BACKING_SETTING, json.dumps([smp.to_dict() for smp in self.backing]))
+
+    def _backing_tol(self) -> float:
+        try:
+            return min(10.0, max(0.5, float(self.var_backing_tol.get().replace(",", "."))))
+        except (tk.TclError, ValueError):
+            return BACKING_DEFAULT_TOL
+
+    def _brush_radius(self) -> int:
+        try:
+            return min(60, max(1, int(float(self.var_backing_r.get()))))
+        except (tk.TclError, ValueError):
+            return 10
+
+    def _add_backing_sample(self, x: float, y: float):
+        smp = sample_backing(self.image_bgr, x, y, self._brush_radius() / self.view_scale)
+        if smp is None:
+            self.lbl_status.config(text="Background sample: the disc is outside the photo.")
+            return
+        self.backing.append(smp)
+        self._save_backing()
+        self._backing_changed()
+        msg = (f"Background sample {len(self.backing)} added: {smp.n} pixels, mean colour {smp.rgb_hex}. "
+               "Press 'Analyse impacts' to use it (tick 'Show matching pixels' to check the tolerance).")
+        share = float(backing_match_image(self.image_bgr, [smp], self._backing_tol()).mean())
+        if share > BACKING_WARN_SHARE:
+            msg = (f"Warning: this colour also matches {share:.0%} of the photo (paper or print of the same "
+                   "colour), where holes cannot be told apart from it. Check with 'Show matching pixels', "
+                   "lower the tolerance, or use the Neural network detector for such holes. " + msg)
+        self.lbl_status.config(text=msg)
+
+    def _remove_backing(self, index: int):
+        if 0 <= index < len(self.backing):
+            self.backing.pop(index)
+            self._save_backing()
+            self._backing_changed()
+
+    def clear_backing(self):
+        self.backing = []
+        self._save_backing()
+        self._backing_changed()
+
+    def _backing_changed(self):
+        """Refresh the swatches and the matching-pixels overlay, then redraw."""
+        self._update_swatches()
+        self.backing_mask = None
+        if self.var_show_backing.get() and self.backing and self.image_bgr is not None:
+            m = backing_match_image(self.image_bgr, self.backing, self._backing_tol())
+            self.backing_mask = Image.fromarray(m.astype(np.uint8) * 150)  # 150/255: see-through
+            self.backing_mask_k = m.shape[1] / self.image_bgr.shape[1]
+        self.redraw()
+
+    def _update_swatches(self):
+        for w in self.swatch_bar.winfo_children():
+            w.destroy()
+        if not self.backing:
+            ttk.Label(self.swatch_bar, text="no colour", foreground="#888").pack(side="left")
+            return
+        for i, smp in enumerate(self.backing[:MAX_SWATCHES]):
+            sw = tk.Label(self.swatch_bar, bg=smp.rgb_hex, width=2, relief="solid", bd=1, cursor="X_cursor")
+            sw.pack(side="left", padx=1)
+            sw.bind("<Button-1>", lambda e, k=i: self._remove_backing(k))
+        if len(self.backing) > MAX_SWATCHES:
+            ttk.Label(self.swatch_bar, text=f"+{len(self.backing) - MAX_SWATCHES}").pack(side="left")
+
+    def _on_motion(self, event):
+        self.canvas.delete("brush")
+        if self.mode == "backing" and self.pil_image is not None:
+            r = self._brush_radius()
+            self.canvas.create_oval(event.x - r, event.y - r, event.x + r, event.y + r,
+                                    outline="#ff00ff", width=2, tags="brush")
+
+    # ------------------------------------------------------ neural network
+    def _model_info(self) -> str:
+        if not model_available():
+            return "Neural network: no model file (see the technical doc, 'Hole detection network')."
+        try:
+            meta = json.loads(MODEL_PATH.with_suffix(".json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return "Neural network: model found."
+        txt = f"Network trained on {meta.get('photos', '?')} photos / {meta.get('holes', '?')} holes"
+        val = meta.get("validation") or {}
+        if "recall" in val and "precision" in val:
+            txt += (f"; on photos it had not seen it found {val['recall']:.0%} of the holes, "
+                    f"{val['precision']:.0%} of its hits were right")
+        return txt + "."
+
+    def _get_hole_net(self) -> HoleNet | None:
+        if self._hole_net is None:
+            if not model_available():
+                messagebox.showwarning("Neural network", f"Model file not found:\n{MODEL_PATH}")
+                return None
+            try:
+                self._hole_net = HoleNet()
+            except Exception as exc:  # damaged file, OpenCV without DNN, ...
+                messagebox.showerror("Neural network", f"Cannot load {MODEL_PATH.name}:\n{exc}")
+                return None
+        return self._hole_net
+
+    def _detector_changed(self):
+        if self.var_detector.get() != DETECTORS[0] and self._get_hole_net() is None:
+            self.var_detector.set(DETECTORS[0])
+        self.db.set_setting(DETECTOR_SETTING, self.var_detector.get())
+
+    def save_training_label(self):
+        """Write the current impacts as a label for training/train_hole_model.py."""
+        if self.image_bgr is None or not self.image_path:
+            messagebox.showinfo("Training label", "Open an image first.")
+            return
+        if not self.impacts and not messagebox.askyesno(
+                "Training label", "There is no impact. Save the photo as an example without any hole?"):
+            return
+        base = Path(self.db.path).resolve().parent
+        name = self.source_name or Path(self.image_path).name
+        path = label_path(base, name)
+        if path.exists() and not messagebox.askyesno("Training label", f"{path.name} exists. Replace it?"):
+            return
+        src = Path(self.image_path).resolve()
+        try:
+            rel = src.relative_to(base)
+        except ValueError:  # photo outside the data folder: keep a copy next to the labels
+            dst = base / IMAGES_DIR / src.name
+            k = 2
+            while dst.exists() and not filecmp.cmp(dst, src, shallow=False):
+                dst = dst.with_name(f"{src.stem}_{k}{src.suffix}")
+                k += 1
+            try:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                if not dst.exists():
+                    shutil.copy2(src, dst)
+            except OSError as exc:
+                messagebox.showerror("Training label", f"Cannot copy the photo:\n{exc}")
+                return
+            rel = dst.relative_to(base)
+        h, w = self.image_bgr.shape[:2]
+        if self.px_per_mm:
+            try:
+                r = self.var_hole.get() / 2 * self.px_per_mm
+            except tk.TclError:
+                r = max(w, h) / 100
+        elif self.single_hole_area:
+            r = (self.single_hole_area / pi) ** 0.5
+        else:
+            r = max(w, h) / 100
+        label = {"image": rel.as_posix(), "width": w, "height": h,
+                 "source": f"app export {date.today().isoformat()}", "r_default": round(r, 1),
+                 "holes": [{"x": round(i.x, 1), "y": round(i.y, 1), "r": None} for i in self.impacts],
+                 "ignore": []}
+        try:
+            save_label(path, label)
+        except OSError as exc:
+            messagebox.showerror("Training label", f"Cannot write {path}:\n{exc}")
+            return
+        self.lbl_status.config(text=f"Training label saved: {path} ({len(self.impacts)} holes). "
+                                    "Retrain with training/train_hole_model.py.")
 
     def update_stats(self):
         """Recompute per-group and image-level statistics and refresh the panel."""

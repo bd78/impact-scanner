@@ -1,0 +1,19 @@
+{
+ "image": "samples/shooting-range-target-bullet-holes-260nw-2268053913.webp",
+ "width": 390,
+ "height": 280,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 4.5,
+ "holes": [
+  {"x": 193.0, "y": 97.0, "r": null},
+  {"x": 186.0, "y": 112.0, "r": null},
+  {"x": 177.0, "y": 119.0, "r": null},
+  {"x": 172.0, "y": 127.0, "r": null},
+  {"x": 180.0, "y": 137.0, "r": null},
+  {"x": 209.0, "y": 133.0, "r": null},
+  {"x": 198.0, "y": 141.0, "r": null},
+  {"x": 187.0, "y": 155.0, "r": null},
+  {"x": 206.0, "y": 175.0, "r": null}
+ ],
+ "ignore": []
+}

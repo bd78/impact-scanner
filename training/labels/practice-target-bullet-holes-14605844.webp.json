@@ -1,0 +1,21 @@
+{
+ "image": "samples/practice-target-bullet-holes-14605844.webp",
+ "width": 800,
+ "height": 796,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 13.0,
+ "holes": [
+  {"x": 487.0, "y": 186.0, "r": null},
+  {"x": 271.0, "y": 327.0, "r": null},
+  {"x": 452.0, "y": 442.0, "r": null},
+  {"x": 111.0, "y": 588.0, "r": null},
+  {"x": 358.0, "y": 591.0, "r": null},
+  {"x": 280.0, "y": 654.0, "r": null},
+  {"x": 596.0, "y": 637.0, "r": null},
+  {"x": 402.0, "y": 678.0, "r": null},
+  {"x": 391.0, "y": 730.0, "r": null},
+  {"x": 516.0, "y": 751.0, "r": null},
+  {"x": 141.0, "y": 763.0, "r": null}
+ ],
+ "ignore": []
+}

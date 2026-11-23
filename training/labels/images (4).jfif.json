@@ -1,0 +1,23 @@
+{
+ "image": "samples/images (4).jfif",
+ "width": 509,
+ "height": 392,
+ "group": "orange-12",
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 6.0,
+ "holes": [
+  {"x": 254.5, "y": 154.5, "r": null},
+  {"x": 237.0, "y": 167.0, "r": null},
+  {"x": 216.0, "y": 183.0, "r": null},
+  {"x": 246.0, "y": 180.0, "r": null},
+  {"x": 272.5, "y": 182.0, "r": null},
+  {"x": 281.0, "y": 189.0, "r": null},
+  {"x": 264.5, "y": 200.0, "r": null},
+  {"x": 204.0, "y": 212.5, "r": null},
+  {"x": 217.0, "y": 216.0, "r": null},
+  {"x": 244.0, "y": 214.0, "r": null},
+  {"x": 219.0, "y": 229.5, "r": null},
+  {"x": 266.0, "y": 227.0, "r": null}
+ ],
+ "ignore": []
+}

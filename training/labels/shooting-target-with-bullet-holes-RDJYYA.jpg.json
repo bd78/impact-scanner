@@ -1,0 +1,17 @@
+{
+ "image": "samples/shooting-target-with-bullet-holes-RDJYYA.jpg",
+ "width": 1300,
+ "height": 1306,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 14.0,
+ "holes": [
+  {"x": 594.0, "y": 419.0, "r": null},
+  {"x": 483.0, "y": 594.0, "r": null},
+  {"x": 612.0, "y": 671.0, "r": null}
+ ],
+ "ignore": [
+  [500, 385, 535, 415],
+  [460, 705, 490, 740],
+  [530, 460, 830, 600]
+ ]
+}

@@ -1,0 +1,858 @@
+{
+ "folds": 4,
+ "iters": 8000,
+ "seed": 0,
+ "threshold": 0.3,
+ "network": {
+  "tp": 423,
+  "fp": 45,
+  "fn": 182,
+  "precision": 0.9038461538461539,
+  "recall": 0.6991735537190082,
+  "f1": 0.7884436160298229
+ },
+ "classic": {
+  "tp": 132,
+  "fp": 807,
+  "fn": 473,
+  "precision": 0.14057507987220447,
+  "recall": 0.21818181818181817,
+  "f1": 0.1709844559585492
+ },
+ "by_threshold": {
+  "0.1": {
+   "tp": 495,
+   "fp": 402,
+   "fn": 110,
+   "precision": 0.5518394648829431,
+   "recall": 0.8181818181818182,
+   "f1": 0.659121171770972
+  },
+  "0.15": {
+   "tp": 471,
+   "fp": 235,
+   "fn": 134,
+   "precision": 0.6671388101983002,
+   "recall": 0.7785123966942149,
+   "f1": 0.7185354691075515
+  },
+  "0.2": {
+   "tp": 458,
+   "fp": 145,
+   "fn": 147,
+   "precision": 0.7595356550580431,
+   "recall": 0.7570247933884298,
+   "f1": 0.7582781456953642
+  },
+  "0.25": {
+   "tp": 442,
+   "fp": 79,
+   "fn": 163,
+   "precision": 0.8483685220729367,
+   "recall": 0.7305785123966942,
+   "f1": 0.7850799289520426
+  },
+  "0.3": {
+   "tp": 423,
+   "fp": 45,
+   "fn": 182,
+   "precision": 0.9038461538461539,
+   "recall": 0.6991735537190082,
+   "f1": 0.7884436160298229
+  },
+  "0.35": {
+   "tp": 407,
+   "fp": 31,
+   "fn": 198,
+   "precision": 0.9292237442922374,
+   "recall": 0.6727272727272727,
+   "f1": 0.7804410354745925
+  },
+  "0.4": {
+   "tp": 397,
+   "fp": 19,
+   "fn": 208,
+   "precision": 0.9543269230769231,
+   "recall": 0.656198347107438,
+   "f1": 0.7776689520078354
+  },
+  "0.45": {
+   "tp": 369,
+   "fp": 14,
+   "fn": 236,
+   "precision": 0.9634464751958225,
+   "recall": 0.6099173553719008,
+   "f1": 0.7469635627530364
+  },
+  "0.5": {
+   "tp": 345,
+   "fp": 12,
+   "fn": 260,
+   "precision": 0.9663865546218487,
+   "recall": 0.5702479338842975,
+   "f1": 0.7172557172557172
+  },
+  "0.55": {
+   "tp": 329,
+   "fp": 8,
+   "fn": 276,
+   "precision": 0.9762611275964391,
+   "recall": 0.543801652892562,
+   "f1": 0.6985138004246283
+  },
+  "0.6": {
+   "tp": 305,
+   "fp": 5,
+   "fn": 300,
+   "precision": 0.9838709677419355,
+   "recall": 0.5041322314049587,
+   "f1": 0.6666666666666667
+  },
+  "0.65": {
+   "tp": 262,
+   "fp": 4,
+   "fn": 343,
+   "precision": 0.9849624060150376,
+   "recall": 0.43305785123966944,
+   "f1": 0.6016073478760046
+  },
+  "0.7": {
+   "tp": 201,
+   "fp": 4,
+   "fn": 404,
+   "precision": 0.9804878048780488,
+   "recall": 0.3322314049586777,
+   "f1": 0.49629629629629635
+  },
+  "0.75": {
+   "tp": 129,
+   "fp": 4,
+   "fn": 476,
+   "precision": 0.9699248120300752,
+   "recall": 0.21322314049586777,
+   "f1": 0.34959349593495936
+  }
+ },
+ "photos": [
+  {
+   "photo": "1.jpg",
+   "group": "1.jpg",
+   "fold": 3,
+   "holes": 15,
+   "network": {
+    "tp": 8,
+    "fp": 1,
+    "fn": 7
+   },
+   "classic": {
+    "tp": 12,
+    "fp": 11,
+    "fn": 3
+   }
+  },
+  {
+   "photo": "1000_F_555000618_3RfWOZ8t3ZqLdEhGbxgijkEPN7CZh3NR.jpg",
+   "group": "1000_F_555000618_3RfWOZ8t3ZqLdEhGbxgijkEPN7CZh3NR.jpg",
+   "fold": 3,
+   "holes": 8,
+   "network": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 4
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 8
+   }
+  },
+  {
+   "photo": "2.jpg",
+   "group": "2.jpg",
+   "fold": 4,
+   "holes": 11,
+   "network": {
+    "tp": 2,
+    "fp": 2,
+    "fn": 9
+   },
+   "classic": {
+    "tp": 5,
+    "fp": 12,
+    "fn": 6
+   }
+  },
+  {
+   "photo": "3.jpg",
+   "group": "3.jpg",
+   "fold": 4,
+   "holes": 15,
+   "network": {
+    "tp": 10,
+    "fp": 0,
+    "fn": 5
+   },
+   "classic": {
+    "tp": 10,
+    "fp": 7,
+    "fn": 5
+   }
+  },
+  {
+   "photo": "51idwtDcGnL._AC_UF894,1000_QL80_.jpg",
+   "group": "splatter-51idwt",
+   "fold": 1,
+   "holes": 35,
+   "network": {
+    "tp": 35,
+    "fp": 1,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 5,
+    "fp": 20,
+    "fn": 30
+   }
+  },
+  {
+   "photo": "51JP5apBD1L._AC_SY300_SX300_QL70_ML2_.avif",
+   "group": "51JP5apBD1L._AC_SY300_SX300_QL70_ML2_.avif",
+   "fold": 1,
+   "holes": 21,
+   "network": {
+    "tp": 21,
+    "fp": 1,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 1,
+    "fp": 16,
+    "fn": 20
+   }
+  },
+  {
+   "photo": "71f6koWeQpL._AC_SL1500_.avif",
+   "group": "71f6koWeQpL._AC_SL1500_.avif",
+   "fold": 3,
+   "holes": 6,
+   "network": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 6
+   },
+   "classic": {
+    "tp": 3,
+    "fp": 46,
+    "fn": 3
+   }
+  },
+  {
+   "photo": "71kgGxkkd3L._AC_SL1500_.avif",
+   "group": "71kgGxkkd3L._AC_SL1500_.avif",
+   "fold": 4,
+   "holes": 5,
+   "network": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 4
+   },
+   "classic": {
+    "tp": 2,
+    "fp": 114,
+    "fn": 3
+   }
+  },
+  {
+   "photo": "81biofuEVVL._AC_SL1500_.avif",
+   "group": "81biofuEVVL._AC_SL1500_.avif",
+   "fold": 3,
+   "holes": 21,
+   "network": {
+    "tp": 20,
+    "fp": 0,
+    "fn": 1
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 142,
+    "fn": 21
+   }
+  },
+  {
+   "photo": "81LsvBJLCSL._AC_SL1500_.avif",
+   "group": "81LsvBJLCSL._AC_SL1500_.avif",
+   "fold": 3,
+   "holes": 44,
+   "network": {
+    "tp": 44,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 7,
+    "fn": 44
+   }
+  },
+  {
+   "photo": "81Tt0sK4dvL._AC_SL1500_.avif",
+   "group": "81Tt0sK4dvL._AC_SL1500_.avif",
+   "fold": 2,
+   "holes": 25,
+   "network": {
+    "tp": 25,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 27,
+    "fn": 25
+   }
+  },
+  {
+   "photo": "bullet-holes-in-shooting-target-JOHF05345.jpg",
+   "group": "bullet-holes-in-shooting-target-JOHF05345.jpg",
+   "fold": 2,
+   "holes": 13,
+   "network": {
+    "tp": 10,
+    "fp": 4,
+    "fn": 3
+   },
+   "classic": {
+    "tp": 1,
+    "fp": 21,
+    "fn": 12
+   }
+  },
+  {
+   "photo": "Bullet-holes-in-targets-whose-scoring-areas-are-concentric-circumferences.webp",
+   "group": "Bullet-holes-in-targets-whose-scoring-areas-are-concentric-circumferences.webp",
+   "fold": 1,
+   "holes": 6,
+   "network": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 5
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 6
+   }
+  },
+  {
+   "photo": "fe341a73-bda5-48af-9d48-90d44ce664cc.jpg",
+   "group": "fe341a73-bda5-48af-9d48-90d44ce664cc.jpg",
+   "fold": 4,
+   "holes": 38,
+   "network": {
+    "tp": 10,
+    "fp": 4,
+    "fn": 28
+   },
+   "classic": {
+    "tp": 8,
+    "fp": 14,
+    "fn": 30
+   }
+  },
+  {
+   "photo": "gettyimages-174091422-612x612.jpg",
+   "group": "gettyimages-174091422-612x612.jpg",
+   "fold": 4,
+   "holes": 10,
+   "network": {
+    "tp": 8,
+    "fp": 1,
+    "fn": 2
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 10
+   }
+  },
+  {
+   "photo": "gettyimages-200560263-001-612x612.jpg",
+   "group": "gettyimages-200560263-001-612x612.jpg",
+   "fold": 2,
+   "holes": 11,
+   "network": {
+    "tp": 10,
+    "fp": 9,
+    "fn": 1
+   },
+   "classic": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 10
+   }
+  },
+  {
+   "photo": "gun-target-bullet-holes-vector-illustration-success-shot-aim-78997474.webp",
+   "group": "gun-target-bullet-holes-vector-illustration-success-shot-aim-78997474.webp",
+   "fold": 3,
+   "holes": 11,
+   "network": {
+    "tp": 11,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 11
+   }
+  },
+  {
+   "photo": "holes-in-a-shooting-practice-target-FE19MT.jpg",
+   "group": "holes-in-a-shooting-practice-target-FE19MT.jpg",
+   "fold": 1,
+   "holes": 8,
+   "network": {
+    "tp": 2,
+    "fp": 1,
+    "fn": 6
+   },
+   "classic": {
+    "tp": 3,
+    "fp": 3,
+    "fn": 5
+   }
+  },
+  {
+   "photo": "human-target-bullet-holes-gun-firing-range-shaped-like-bull-s-eye-headshot-isolated-white-background-46951070.webp",
+   "group": "human-target-bullet-holes-gun-firing-range-shaped-like-bull-s-eye-headshot-isolated-white-background-46951070.webp",
+   "fold": 4,
+   "holes": 8,
+   "network": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 2
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 8
+   }
+  },
+  {
+   "photo": "images (1).jfif",
+   "group": "splatter-51idwt",
+   "fold": 1,
+   "holes": 35,
+   "network": {
+    "tp": 35,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 1,
+    "fp": 6,
+    "fn": 34
+   }
+  },
+  {
+   "photo": "images (3).jfif",
+   "group": "images (3).jfif",
+   "fold": 3,
+   "holes": 9,
+   "network": {
+    "tp": 8,
+    "fp": 4,
+    "fn": 1
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 9
+   }
+  },
+  {
+   "photo": "images (4).jfif",
+   "group": "orange-12",
+   "fold": 3,
+   "holes": 12,
+   "network": {
+    "tp": 8,
+    "fp": 0,
+    "fn": 4
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 12
+   }
+  },
+  {
+   "photo": "images.jfif",
+   "group": "images.jfif",
+   "fold": 2,
+   "holes": 4,
+   "network": {
+    "tp": 4,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 2,
+    "fp": 14,
+    "fn": 2
+   }
+  },
+  {
+   "photo": "IMG_5857.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 19,
+   "network": {
+    "tp": 1,
+    "fp": 3,
+    "fn": 18
+   },
+   "classic": {
+    "tp": 19,
+    "fp": 20,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "IMG_5858.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 31,
+   "network": {
+    "tp": 2,
+    "fp": 3,
+    "fn": 29
+   },
+   "classic": {
+    "tp": 31,
+    "fp": 8,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "IMG_5859.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 0,
+   "network": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "IMG_5860.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 0,
+   "network": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "IMG_5861.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 0,
+   "network": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "IMG_5862.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 0,
+   "network": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 3,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "IMG_5863.jpeg",
+   "group": "iphone-air-card",
+   "fold": 2,
+   "holes": 0,
+   "network": {
+    "tp": 0,
+    "fp": 3,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "istockphoto-163650165-612x612.jpg",
+   "group": "istockphoto-163650165-612x612.jpg",
+   "fold": 2,
+   "holes": 10,
+   "network": {
+    "tp": 10,
+    "fp": 0,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 10
+   }
+  },
+  {
+   "photo": "istockphoto-165727384-612x612.jpg",
+   "group": "istockphoto-165727384-612x612.jpg",
+   "fold": 4,
+   "holes": 1,
+   "network": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 1
+   }
+  },
+  {
+   "photo": "paper-target-shooting-bullet-holes-260nw-2479633579.webp",
+   "group": "paper-target-shooting-bullet-holes-260nw-2479633579.webp",
+   "fold": 3,
+   "holes": 12,
+   "network": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 12
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 12
+   }
+  },
+  {
+   "photo": "practice-target-bullet-holes-14605844.webp",
+   "group": "practice-target-bullet-holes-14605844.webp",
+   "fold": 1,
+   "holes": 11,
+   "network": {
+    "tp": 11,
+    "fp": 1,
+    "fn": 0
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 5,
+    "fn": 11
+   }
+  },
+  {
+   "photo": "shooting-range-gun-target-bullet-260nw-573036892.webp",
+   "group": "shooting-range-gun-target-bullet-260nw-573036892.webp",
+   "fold": 4,
+   "holes": 31,
+   "network": {
+    "tp": 29,
+    "fp": 0,
+    "fn": 2
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 31
+   }
+  },
+  {
+   "photo": "shooting-range-target-bullet-holes-260nw-2268053913.webp",
+   "group": "shooting-range-target-bullet-holes-260nw-2268053913.webp",
+   "fold": 1,
+   "holes": 9,
+   "network": {
+    "tp": 8,
+    "fp": 1,
+    "fn": 1
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 0,
+    "fn": 9
+   }
+  },
+  {
+   "photo": "shooting-target-bullet-holes-close-up-red-bullseye-pellet-center-ring-31408522.webp",
+   "group": "shooting-target-bullet-holes-close-up-red-bullseye-pellet-center-ring-31408522.webp",
+   "fold": 4,
+   "holes": 9,
+   "network": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 4
+   },
+   "classic": {
+    "tp": 8,
+    "fp": 4,
+    "fn": 1
+   }
+  },
+  {
+   "photo": "shooting-target-on-tree-trunk-with-bullet-holes-outdoor-shooting-range-with-paper-target-for-airgun-practice-rustic-texture-background-close-up-view-for-sport-and-accuracy-themes-photo.jfif",
+   "group": "shooting-target-on-tree-trunk-with-bullet-holes-outdoor-shooting-range-with-paper-target-for-airgun-practice-rustic-texture-background-close-up-view-for-sport-and-accuracy-themes-photo.jfif",
+   "fold": 1,
+   "holes": 12,
+   "network": {
+    "tp": 7,
+    "fp": 1,
+    "fn": 5
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 105,
+    "fn": 12
+   }
+  },
+  {
+   "photo": "shooting-target-with-bullet-holes-conceptual-imagesscience-photo-library.jpg",
+   "group": "orange-12",
+   "fold": 3,
+   "holes": 12,
+   "network": {
+    "tp": 5,
+    "fp": 0,
+    "fn": 7
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 19,
+    "fn": 12
+   }
+  },
+  {
+   "photo": "shooting-target-with-bullet-holes-RDJYYA.jpg",
+   "group": "shooting-target-with-bullet-holes-RDJYYA.jpg",
+   "fold": 3,
+   "holes": 3,
+   "network": {
+    "tp": 1,
+    "fp": 0,
+    "fn": 2
+   },
+   "classic": {
+    "tp": 1,
+    "fp": 7,
+    "fn": 2
+   }
+  },
+  {
+   "photo": "shot-target-human-silhouette-with-bullet-circular-holes-military-props-of-hitman-shape-with-gunshot-outlet-for-weapon-practice-training-vector-2KENM49.jpg",
+   "group": "shot-target-human-silhouette-with-bullet-circular-holes-military-props-of-hitman-shape-with-gunshot-outlet-for-weapon-practice-training-vector-2KENM49.jpg",
+   "fold": 4,
+   "holes": 25,
+   "network": {
+    "tp": 23,
+    "fp": 0,
+    "fn": 2
+   },
+   "classic": {
+    "tp": 6,
+    "fp": 31,
+    "fn": 19
+   }
+  },
+  {
+   "photo": "stock-photo--target-with-bullet-holes-1491283967.jpg",
+   "group": "stock-photo--target-with-bullet-holes-1491283967.jpg",
+   "fold": 2,
+   "holes": 7,
+   "network": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 1
+   },
+   "classic": {
+    "tp": 7,
+    "fp": 58,
+    "fn": 0
+   }
+  },
+  {
+   "photo": "stock-photo-image-of-shooting-target-with-bullet-holes-2588248669.jpg",
+   "group": "stock-photo-image-of-shooting-target-with-bullet-holes-2588248669.jpg",
+   "fold": 1,
+   "holes": 16,
+   "network": {
+    "tp": 12,
+    "fp": 3,
+    "fn": 4
+   },
+   "classic": {
+    "tp": 5,
+    "fp": 43,
+    "fn": 11
+   }
+  },
+  {
+   "photo": "target-27267845.webp",
+   "group": "target-27267845.webp",
+   "fold": 2,
+   "holes": 9,
+   "network": {
+    "tp": 6,
+    "fp": 0,
+    "fn": 3
+   },
+   "classic": {
+    "tp": 0,
+    "fp": 6,
+    "fn": 9
+   }
+  },
+  {
+   "photo": "Target-Gun-with-Bullet-Holes-Vector-Graphics-23814522-1.jpg",
+   "group": "Target-Gun-with-Bullet-Holes-Vector-Graphics-23814522-1.jpg",
+   "fold": 2,
+   "holes": 17,
+   "network": {
+    "tp": 14,
+    "fp": 0,
+    "fn": 3
+   },
+   "classic": {
+    "tp": 1,
+    "fp": 35,
+    "fn": 16
+   }
+  }
+ ]
+}

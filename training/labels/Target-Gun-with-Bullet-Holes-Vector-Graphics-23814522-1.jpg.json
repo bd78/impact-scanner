@@ -1,0 +1,27 @@
+{
+ "image": "samples/Target-Gun-with-Bullet-Holes-Vector-Graphics-23814522-1.jpg",
+ "width": 1820,
+ "height": 1214,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 18.0,
+ "holes": [
+  {"x": 946.0, "y": 179.0, "r": null},
+  {"x": 973.0, "y": 195.0, "r": null},
+  {"x": 673.0, "y": 369.0, "r": null},
+  {"x": 707.0, "y": 380.0, "r": null},
+  {"x": 1215.0, "y": 375.0, "r": null},
+  {"x": 1401.0, "y": 427.0, "r": null},
+  {"x": 847.0, "y": 614.0, "r": null},
+  {"x": 1000.0, "y": 582.0, "r": null},
+  {"x": 763.0, "y": 665.0, "r": null},
+  {"x": 1040.0, "y": 715.0, "r": null},
+  {"x": 483.0, "y": 756.0, "r": null},
+  {"x": 680.0, "y": 850.0, "r": null},
+  {"x": 715.0, "y": 836.0, "r": null},
+  {"x": 725.0, "y": 870.0, "r": null},
+  {"x": 1108.0, "y": 881.0, "r": null},
+  {"x": 1234.0, "y": 897.0, "r": null},
+  {"x": 582.0, "y": 1048.0, "r": null}
+ ],
+ "ignore": []
+}

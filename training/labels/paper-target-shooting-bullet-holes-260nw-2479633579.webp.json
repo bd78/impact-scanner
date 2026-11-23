@@ -1,0 +1,22 @@
+{
+ "image": "samples/paper-target-shooting-bullet-holes-260nw-2479633579.webp",
+ "width": 390,
+ "height": 280,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 8.0,
+ "holes": [
+  {"x": 211.0, "y": 14.0, "r": null},
+  {"x": 115.0, "y": 76.0, "r": null},
+  {"x": 187.0, "y": 69.0, "r": null},
+  {"x": 227.0, "y": 65.0, "r": null},
+  {"x": 144.0, "y": 106.0, "r": null},
+  {"x": 215.0, "y": 106.0, "r": null},
+  {"x": 197.0, "y": 130.0, "r": null},
+  {"x": 142.0, "y": 142.0, "r": null},
+  {"x": 188.0, "y": 137.0, "r": null},
+  {"x": 150.0, "y": 175.0, "r": null},
+  {"x": 190.0, "y": 175.0, "r": null},
+  {"x": 205.0, "y": 192.0, "r": null}
+ ],
+ "ignore": []
+}
