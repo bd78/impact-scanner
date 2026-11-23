@@ -119,13 +119,14 @@ the app uses it to tell single holes from torn multi-shot regions.
 Optionally type the number of **Shots fired**. Then click **Analyse impacts**.
 
 Each detected shot is drawn as a numbered yellow circle. A dashed rectangle in the
-group's colour shows each group's extent and a cross marks its centre. Detected torn
+group's colour shows each group's extent and a cross marks its centre; the group's name
+is written just above the top-left corner of that rectangle. Detected torn
 regions that contain several shots are split into several points. The colours, line
 styles and widths can be changed in the **Parameters** tab (section 6).
 
 If the photo shows **several target diagrams** (a card of 10 or 25 small targets), the
 app finds every black circle and makes one group per diagram: the circles are drawn in
-the group colours with their names (G1, G2, … in reading order) and every shot is
+the group colours, named G1, G2, … in reading order, and every shot is
 assigned to the nearest diagram. Diagrams without any shot appear greyed in the group
 list. A photo with a single target gives a single group G1.
 
