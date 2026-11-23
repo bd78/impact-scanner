@@ -385,8 +385,12 @@ def split(photos: list[Photo], seed: int, frac: float = 0.2):
 
 
 def model_out(path: Path) -> Path:
-    """The --out model file, checked: an absolute path ending in .onnx."""
-    path = Path(path).resolve()
+    """The --out model file, checked: an .onnx file inside the repository (the app only
+    loads target_analyzer/models/hole_net.onnx, so a model is never written elsewhere)."""
+    root = ROOT.resolve()
+    path = (root / path).resolve()  # an absolute --out replaces root, then is checked below
+    if not path.is_relative_to(root):
+        raise SystemExit(f"--out must be inside {root}, got {path}")
     if path.suffix.lower() != ".onnx":
         raise SystemExit(f"--out must be an .onnx file, got {path}")
     return path
@@ -498,7 +502,8 @@ def main():
     ap.add_argument("--skip-val", action="store_true")
     ap.add_argument("--val-only", action="store_true")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    ap.add_argument("--out", type=Path, default=MODEL_PATH)
+    ap.add_argument("--out", type=Path, default=MODEL_PATH,
+                    help=".onnx file inside the repository; default: the model the app loads")
     ap.add_argument("--cv", type=int, default=0, metavar="K")
     ap.add_argument("--base", type=Path, default=ROOT,
                     help="folder holding training/labels (the database folder of the app); default: the repository")
