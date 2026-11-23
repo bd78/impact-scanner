@@ -1,0 +1,26 @@
+{
+ "image": "samples/stock-photo-image-of-shooting-target-with-bullet-holes-2588248669.jpg",
+ "width": 1500,
+ "height": 1100,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 6.0,
+ "holes": [
+  {"x": 581.0, "y": 239.0, "r": null},
+  {"x": 641.0, "y": 236.0, "r": null},
+  {"x": 869.0, "y": 231.0, "r": null},
+  {"x": 746.0, "y": 278.0, "r": null},
+  {"x": 781.0, "y": 275.0, "r": null},
+  {"x": 618.0, "y": 371.0, "r": null},
+  {"x": 655.0, "y": 397.0, "r": null},
+  {"x": 674.0, "y": 393.0, "r": null},
+  {"x": 684.0, "y": 405.0, "r": null},
+  {"x": 716.0, "y": 409.0, "r": null},
+  {"x": 757.0, "y": 423.0, "r": null},
+  {"x": 846.0, "y": 398.0, "r": null},
+  {"x": 532.0, "y": 420.0, "r": null},
+  {"x": 633.0, "y": 451.0, "r": null},
+  {"x": 738.0, "y": 525.0, "r": null},
+  {"x": 713.0, "y": 553.0, "r": null}
+ ],
+ "ignore": []
+}

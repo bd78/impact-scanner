@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import compileall
 import importlib.util
+import os
 import shutil
 import subprocess
 import sys
@@ -69,8 +70,13 @@ def build(workdir: Path, out_dir: Path) -> None:
         "--workpath", str(workdir / "build"),
         "--specpath", str(workdir),
         "--paths", str(ROOT),
-        str(launcher),
     ]
+    models = PACKAGE / "models"  # trained hole-detection network, loaded by hole_model.py
+    if models.is_dir():
+        cmd += ["--add-data", f"{models}{os.pathsep}target_analyzer/models"]
+    else:
+        print("WARNING: target_analyzer/models is missing; the 'Neural network' detector will be unavailable.")
+    cmd.append(str(launcher))
     result = subprocess.run(cmd, cwd=ROOT)
     if result.returncode != 0:
         fail(f"PyInstaller exited with code {result.returncode}")

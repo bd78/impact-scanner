@@ -1,0 +1,275 @@
+{
+ "photos": 45,
+ "holes": 605,
+ "iters": 8000,
+ "seed": 0,
+ "validation": {
+  "photos": [
+   {
+    "photo": "1.jpg",
+    "holes": 15,
+    "network": {
+     "tp": 8,
+     "fp": 0,
+     "fn": 7
+    },
+    "classic": {
+     "tp": 12,
+     "fp": 11,
+     "fn": 3
+    }
+   },
+   {
+    "photo": "images (3).jfif",
+    "holes": 9,
+    "network": {
+     "tp": 8,
+     "fp": 1,
+     "fn": 1
+    },
+    "classic": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 9
+    }
+   },
+   {
+    "photo": "gettyimages-174091422-612x612.jpg",
+    "holes": 10,
+    "network": {
+     "tp": 8,
+     "fp": 3,
+     "fn": 2
+    },
+    "classic": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 10
+    }
+   },
+   {
+    "photo": "istockphoto-163650165-612x612.jpg",
+    "holes": 10,
+    "network": {
+     "tp": 10,
+     "fp": 0,
+     "fn": 0
+    },
+    "classic": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 10
+    }
+   },
+   {
+    "photo": "holes-in-a-shooting-practice-target-FE19MT.jpg",
+    "holes": 8,
+    "network": {
+     "tp": 3,
+     "fp": 0,
+     "fn": 5
+    },
+    "classic": {
+     "tp": 3,
+     "fp": 3,
+     "fn": 5
+    }
+   },
+   {
+    "photo": "stock-photo--target-with-bullet-holes-1491283967.jpg",
+    "holes": 7,
+    "network": {
+     "tp": 6,
+     "fp": 0,
+     "fn": 1
+    },
+    "classic": {
+     "tp": 7,
+     "fp": 58,
+     "fn": 0
+    }
+   },
+   {
+    "photo": "shooting-target-on-tree-trunk-with-bullet-holes-outdoor-shooting-range-with-paper-target-for-airgun-practice-rustic-texture-background-close-up-view-for-sport-and-accuracy-themes-photo.jfif",
+    "holes": 12,
+    "network": {
+     "tp": 11,
+     "fp": 4,
+     "fn": 1
+    },
+    "classic": {
+     "tp": 0,
+     "fp": 105,
+     "fn": 12
+    }
+   },
+   {
+    "photo": "81LsvBJLCSL._AC_SL1500_.avif",
+    "holes": 44,
+    "network": {
+     "tp": 44,
+     "fp": 0,
+     "fn": 0
+    },
+    "classic": {
+     "tp": 0,
+     "fp": 7,
+     "fn": 44
+    }
+   },
+   {
+    "photo": "71f6koWeQpL._AC_SL1500_.avif",
+    "holes": 6,
+    "network": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 6
+    },
+    "classic": {
+     "tp": 4,
+     "fp": 45,
+     "fn": 2
+    }
+   }
+  ],
+  "threshold": 0.3,
+  "network": {
+   "tp": 98,
+   "fp": 8,
+   "fn": 23,
+   "precision": 0.9245283018867925,
+   "recall": 0.8099173553719008,
+   "f1": 0.8634361233480177
+  },
+  "classic": {
+   "tp": 26,
+   "fp": 230,
+   "fn": 95,
+   "precision": 0.1015625,
+   "recall": 0.21487603305785125,
+   "f1": 0.13793103448275862
+  },
+  "by_threshold": {
+   "0.1": {
+    "tp": 110,
+    "fp": 213,
+    "fn": 11,
+    "precision": 0.34055727554179566,
+    "recall": 0.9090909090909091,
+    "f1": 0.49549549549549543
+   },
+   "0.15": {
+    "tp": 108,
+    "fp": 87,
+    "fn": 13,
+    "precision": 0.5538461538461539,
+    "recall": 0.8925619834710744,
+    "f1": 0.6835443037974684
+   },
+   "0.2": {
+    "tp": 104,
+    "fp": 48,
+    "fn": 17,
+    "precision": 0.6842105263157895,
+    "recall": 0.859504132231405,
+    "f1": 0.7619047619047619
+   },
+   "0.25": {
+    "tp": 101,
+    "fp": 21,
+    "fn": 20,
+    "precision": 0.8278688524590164,
+    "recall": 0.8347107438016529,
+    "f1": 0.8312757201646092
+   },
+   "0.3": {
+    "tp": 98,
+    "fp": 8,
+    "fn": 23,
+    "precision": 0.9245283018867925,
+    "recall": 0.8099173553719008,
+    "f1": 0.8634361233480177
+   },
+   "0.35": {
+    "tp": 90,
+    "fp": 6,
+    "fn": 31,
+    "precision": 0.9375,
+    "recall": 0.743801652892562,
+    "f1": 0.8294930875576036
+   },
+   "0.4": {
+    "tp": 88,
+    "fp": 2,
+    "fn": 33,
+    "precision": 0.9777777777777777,
+    "recall": 0.7272727272727273,
+    "f1": 0.8341232227488152
+   },
+   "0.45": {
+    "tp": 81,
+    "fp": 1,
+    "fn": 40,
+    "precision": 0.9878048780487805,
+    "recall": 0.6694214876033058,
+    "f1": 0.7980295566502462
+   },
+   "0.5": {
+    "tp": 72,
+    "fp": 1,
+    "fn": 49,
+    "precision": 0.9863013698630136,
+    "recall": 0.5950413223140496,
+    "f1": 0.7422680412371134
+   },
+   "0.55": {
+    "tp": 69,
+    "fp": 1,
+    "fn": 52,
+    "precision": 0.9857142857142858,
+    "recall": 0.5702479338842975,
+    "f1": 0.7225130890052355
+   },
+   "0.6": {
+    "tp": 61,
+    "fp": 0,
+    "fn": 60,
+    "precision": 1.0,
+    "recall": 0.5041322314049587,
+    "f1": 0.6703296703296704
+   },
+   "0.65": {
+    "tp": 53,
+    "fp": 0,
+    "fn": 68,
+    "precision": 1.0,
+    "recall": 0.4380165289256198,
+    "f1": 0.6091954022988505
+   },
+   "0.7": {
+    "tp": 34,
+    "fp": 0,
+    "fn": 87,
+    "precision": 1.0,
+    "recall": 0.2809917355371901,
+    "f1": 0.43870967741935485
+   },
+   "0.75": {
+    "tp": 20,
+    "fp": 0,
+    "fn": 101,
+    "precision": 1.0,
+    "recall": 0.1652892561983471,
+    "f1": 0.28368794326241137
+   }
+  }
+ },
+ "final_training_set": {
+  "tp": 526,
+  "fp": 28,
+  "fn": 79,
+  "precision": 0.9494584837545126,
+  "recall": 0.8694214876033057,
+  "f1": 0.9076790336496979
+ }
+}

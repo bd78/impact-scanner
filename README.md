@@ -7,7 +7,7 @@ A Python based *impacts detector* and grouping measurement tool for shooting spo
 
 Desktop app (Python, Tkinter, OpenCV, SQLite) that detects bullet holes on a photo
 of a paper target, measures the group size and stores the results in a SQLite
-database. Photos can be JPEG, PNG, HEIC/HEIF (iPhone), BMP, TIFF or WebP; EXIF
+database. Photos can be JPEG/JFIF, PNG, HEIC/HEIF (iPhone), AVIF, BMP, TIFF or WebP; EXIF
 rotation is applied automatically. Large photos are analysed at 1920 px.
 
 Documentation: [docs/USER_GUIDE.md](docs/USER_GUIDE.md) for users,
@@ -30,7 +30,12 @@ The database is `targets.db` next to this file, with a JPEG copy of every saved 
 2. **Scale**: *Measure 2 points*: click two points on the photo whose real distance
    you know, then enter the length and pick cm or inch. Or *Auto: from outer black
    circle* and enter the diameter of the black (200 mm on a 25 m precision target).
-3. **Analyse impacts**. Shots are drawn as numbered yellow circles (dashed when
+3. **Analyse impacts**. Two optional helpers for difficult photos: *Hole background
+   colour*: click inside a hole and the app learns the colour and texture of what shows
+   through it (a disc of pixels, not one pixel), then also flags every area of that
+   colour; and *Detector*: the colour rules, a small **neural network** trained on
+   labelled target photos (finds holes by their look, whatever the colours or the shape
+   of the target), or both. Shots are drawn as numbered yellow circles (dashed when
    added by hand); the selected group has a thick red circle and a red box. A photo with several target diagrams (a card of
    25 small targets) gets one group per diagram automatically; a single target gives
    one group. Torn regions with several shots are split by an estimated count; type
@@ -71,10 +76,19 @@ Target styles supported: solid black disc (25 m precision pistol), ring targets 
 a white centre (10 m air rifle / pistol cards, grey or wood backing) and cards of
 25 small ring diagrams (.22 Hunter), each diagram becoming a group.
 
-`tests\check_samples.py` runs the detector on the photos in `samples\` and writes
-annotated images to `tests\out\`, which is the quickest way to tune the parameters on
-new targets:
+`tests\check_samples.py` runs the detector on the photos in `samples\`, scores it
+against the hole positions labelled in `training\labels\`, and writes annotated images
+to `tests\out\`, which is the quickest way to tune the parameters on new targets (add
+`--net` to score the network too):
 
 ```powershell
 .venv\Scripts\python tests\check_samples.py
 ```
+
+## Hole detection network
+
+`target_analyzer\models\hole_net.onnx` is a small U-Net (0.9 M weights) trained on 45
+labelled photos (605 holes) and run with OpenCV's DNN module, so the app needs no extra
+library. *Save as training label* in the app stores corrected shots as new examples;
+retraining needs PyTorch in a separate environment (`requirements-train.txt`,
+`training	rain_hole_model.py`). Details, scores and limits: docs/TECHNICAL.md §10.

@@ -49,8 +49,8 @@ The detector works on any phone photo, but these habits make it reliable:
 - **Even light** without hard shadows across the target (no phone shadow, no window
   glare). Soft shadows are tolerated.
 - Keep the **whole target** in the frame with some paper margin around it.
-- Accepted formats: JPEG, JPG, PNG, HEIC/HEIF (iPhone), BMP, TIFF, WebP. The photo
-  is rotated automatically according to the phone's orientation data.
+- Accepted formats: JPEG, JPG, JFIF, PNG, HEIC/HEIF (iPhone), AVIF, BMP, TIFF, WebP.
+  The photo is rotated automatically according to the phone's orientation data.
 
 ## 3. The main window
 
@@ -62,7 +62,7 @@ The Analyse tab has three areas:
 
 | Area | Content |
 |---|---|
-| Left column | The workflow buttons: open image, scale tools, detection parameters, manual correction tools. |
+| Left column | The workflow buttons: open image, scale tools, detection parameters, hole background colour, detector choice, manual correction tools. |
 | Centre | The photo, with the zoom bar above it. Click on it when a tool is active. |
 | Right column | The group list with its buttons, the measurements of the selected group, the summary of the photo, the display unit and the save form. |
 
@@ -123,6 +123,9 @@ the app uses it to tell single holes from torn multi-shot regions.
 
 Optionally type the number of **Shots fired**. Then click **Analyse impacts**.
 
+Two optional helpers, described below, improve the detection on difficult photos: the
+**hole background colour** (4.3.1) and the **detector** choice (4.3.2).
+
 Each detected shot is drawn as a numbered yellow circle. A dashed rectangle in the
 group's colour shows each group's extent and a cross marks its centre; the group's name
 is written just above the top-left corner of that rectangle. Detected torn
@@ -135,6 +138,57 @@ the group colours, named G1, G2, … in reading order, and every shot is
 assigned to the nearest diagram. Diagrams without any shot appear greyed in the group
 list. A photo with a single target gives a single group G1.
 
+#### 4.3.1 Pick the hole background colour
+
+Through a hole you see whatever is behind the target: a cardboard backer, a wooden
+board, foam, a black board, the sky. When the app misses holes, show it that
+background:
+
+1. Zoom in on a clear hole (Ctrl + click or the mouse wheel).
+2. In **Hole background colour**, click **Pick in a hole (click)**. A magenta circle
+   follows the mouse: it is the patch of pixels that will be sampled. Set its size with
+   **Disc radius (screen px)** so the circle fits *inside* the hole.
+3. Click in the middle of the hole. A colour square appears under the button.
+
+The app does not keep a single pixel colour: it keeps the colour *spread* of the whole
+patch, so the texture of the background (wood grain, cardboard fibres, noise in the
+photo) is recognised too. It also tolerates more change in brightness than in hue,
+because the light varies across a photo. If part of the board is lit and part is in
+shadow, pick one hole in each. The squares stay from one photo to the next and are
+saved for the next session; click a square to remove that colour, or **Clear** to
+remove them all.
+
+Tick **Show matching pixels** to see, in magenta, every pixel of the photo that matches
+the picked colours, then adjust **Tolerance (σ)**:
+
+- holes only partly magenta: raise the tolerance (4, 5), or pick another hole;
+- paper, print or shadows magenta as well: lower it (2, 2.5).
+
+Then click **Analyse impacts**. The colour is used **in addition** to the normal rules.
+Tick **Use only this colour** to rely on it alone; this works best when the background
+colour appears nowhere else on the target, for example dark holes in white paper,
+brown wood behind a target without brown, or the dark centre of the holes on a vector
+drawing. If the background is the same colour as the print (a black board behind black
+rings), the print matches too: in that case use the neural network instead.
+
+#### 4.3.2 Choose the detector
+
+The **Detector** list chooses how holes are found:
+
+| Detector | How it works | Best for |
+|---|---|---|
+| **Colour rules** (default) | Looks for pixels darker or more coloured than the paper, plus your picked background colours. The parameters of section 7 apply. | The target styles it was tuned on (solid black disc, 10 m air cards on grey or wood backing, the .22 Hunter card). |
+| **Neural network** | A small network trained on labelled target photos recognises the *look* of a hole (round shape, torn edge, what shows through it) whatever the colours. The detection parameters and the background colour are not used, except *Hole core Ø* with the scale, which tells it the expected hole size. | Unusual targets and backgrounds: splatter (reactive) targets, silhouettes, coloured rings, black holes on white, holes in black print. |
+| **Both** | Every hole found by the network, plus the holes found by the colour rules that the network did not find. | Getting the most holes when you will correct by hand anyway. |
+
+The text under the list says how many photos the network was trained on and how well it
+did on photos it had never seen. On the targets the colour rules were tuned for (solid
+disc, 10 m cards, Hunter card, with large torn regions) the colour rules are still the
+better choice; the network shines on the other kinds of targets. It still makes mistakes: check every photo and correct
+it with the tools below. A cluster of overlapping holes is often found as fewer holes
+than there are shots: add the missing ones by hand, or type **Shots fired** and use the
+colour rules for that photo.
+
 ### 4.4 Correct the detection
 
 Automatic detection is good but not perfect. Fix it with the click tools:
@@ -144,6 +198,8 @@ Automatic detection is good but not perfect. Fix it with the click tools:
 - **Remove impact (click)**: click on a wrong circle to delete it.
 - **Clear all impacts**: start again from zero (useful if you prefer to mark all
   shots by hand). The groups are kept.
+- **Save as training label**: once the shots are correct, saves them as an example for
+  the neural network (see section 9). It does not change your records.
 - **Move impact to selected group (click)**: select the destination group in the list,
   then click the shots to move there (for example a shot that landed between two
   diagrams and was assigned to the wrong one).
@@ -283,7 +339,12 @@ backing. Change a parameter and click **Analyse impacts** again to see its effec
 | Open kernel (px) | 11 | Removes ring lines, digits and print edges. Raise it if lines or digits are detected; lower it if small holes disappear. |
 | Min area (px²) | 150 | Smaller spots are ignored. Raise it to drop dust and small specks. |
 | Hole core Ø (mm) | 4.0 | The size of the clean part of one hole on your targets. With the scale set, this tells single holes from torn multi-shot regions. For .45 ACP on paper the visible core is about 4 mm; air rifle pellets about 4.5 mm. |
-| Shots fired | empty | Type the real number when you know it: the torn regions are then split into exactly the missing number of shots. |
+| Shots fired | empty | Type the real number when you know it: the torn regions are then split into exactly the missing number of shots. With the *Neural network* detector, only that many hits are kept, the most certain first. |
+| Hole background colour | none | Colours picked inside holes (section 4.3.1). Pixels matching one of them count as holes. |
+| Disc radius (screen px) | 10 | Size of the sampled patch. Keep the magenta circle inside the hole. |
+| Tolerance (σ) | 3 | How far from a picked colour a pixel may be (in standard deviations of that colour's spread). Check with *Show matching pixels*. |
+| Use only this colour | off | Ignore the normal rules and use the picked colours alone. |
+| Detector | Colour rules | Colour rules, Neural network or Both (section 4.3.2). The choice is remembered. |
 
 ## 8. Troubleshooting
 
@@ -294,8 +355,35 @@ backing. Change a parameter and click **Analyse impacts** again to see its effec
 | Many false circles along a shadow edge | Retake the photo without the hard shadow, or lower *Hole max brightness*, or remove them with the Remove tool. |
 | Every hole is split into several points | Set the scale before analysing, and check *Hole core Ø*. Or type *Shots fired*. |
 | Holes on the white paper outside the rings are missed on a solid-disc target | Add them with **Add impact**. |
-| Holes showing a nearly black backing (black board, very dark wood in a shadow) are missed | They cannot be told from the print by colour. Select the group and add them with **Add impact**. |
+| Holes showing a nearly black backing (black board, very dark wood in a shadow) are missed | Pick that background colour inside a hole (4.3.1), or choose the **Neural network** detector. On black print a black background cannot be told from the print by colour: use the network, or add the holes with **Add impact**. |
+| Silhouette, square or other non-round target: holes in the black print are missed | The colour rules only look inside a *round* black disc for bright holes. Choose the **Neural network** detector. The auto scale also needs a black circle: use **Measure 2 points**, and group with **Auto-group: distance** or **New**. |
+| The colour rules find nothing, or hundreds of spots, on an unusual target (splatter target, silhouette, coloured rings, drawing) | Choose the **Neural network** detector, or pick the background colour and tick *Use only this colour*. |
+| *Neural network: no model file* under the detector list | The file `target_analyzer\models\hole_net.onnx` is missing. Reinstall the application, or train it again (section 9). |
 | A card gives fewer groups than diagrams | A circle broken by the grid line or by writing is not found. Press **New** to create the missing group and click its shots, or move them with **Move impact to selected group**. |
 | A shot between two diagrams went to the wrong group | Select the right group and use **Move impact to selected group**. |
 | Cannot open a `.heic` file | Run `.\setup.ps1` again; it installs the `pillow-heif` package. |
 | The app does not start | Run `.\setup.ps1` and read its last lines; it checks every library. |
+
+## 9. Teaching the network your own targets
+
+The network learns from *labelled* photos: a photo plus the exact position of every
+hole. It came with labels for the sample photos; your own targets make it better at
+*your* targets.
+
+1. Analyse a photo, correct every shot (Add / Remove), so that each hole has exactly one
+   circle on it.
+2. Click **Save as training label**. The positions are written to
+   `training\labels\<photo name>.json` next to the database, and a copy of the photo to
+   `training\images\` (unless the photo is already inside that folder, like a record's
+   copy in `images\`). Saving the same photo again replaces its label after
+   confirmation. A photo without any hole is a useful example too (the app asks).
+3. When you have a few new labels, retrain the network. This needs an extra Python
+   environment with PyTorch (about 3 GB, a few minutes of training with an NVIDIA
+   graphics card, an hour or more without); the steps are in `docs\TECHNICAL.md`,
+   section *Hole detection network*. The new model replaces
+   `target_analyzer\models\hole_net.onnx`, and the text under the detector list shows
+   its new scores.
+
+Label torn regions carefully: put one circle on each shot you can tell apart. Where
+shots cannot be told apart, the technical documentation explains how to mark the region
+as "ignore" so it neither teaches nor penalises the network.

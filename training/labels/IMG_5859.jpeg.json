@@ -1,0 +1,13 @@
+{
+ "image": "samples/IMG_5859.jpeg",
+ "width": 3024,
+ "height": 4032,
+ "group": "iphone-air-card",
+ "source": "classic detector output, pruned visually (Claude); torn regions in ignore boxes",
+ "r_default": 40,
+ "holes": [],
+ "ignore": [
+  [880, 2330, 1720, 3290],
+  [1130, 230, 2220, 860]
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "image": "samples/bullet-holes-in-shooting-target-JOHF05345.jpg",
+ "width": 1232,
+ "height": 821,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 7.0,
+ "holes": [
+  {"x": 452.0, "y": 191.0, "r": null},
+  {"x": 644.0, "y": 216.0, "r": null},
+  {"x": 717.0, "y": 252.0, "r": null},
+  {"x": 728.0, "y": 341.0, "r": null},
+  {"x": 623.0, "y": 348.0, "r": null},
+  {"x": 577.0, "y": 381.0, "r": null},
+  {"x": 612.0, "y": 383.0, "r": null},
+  {"x": 719.0, "y": 412.0, "r": null},
+  {"x": 528.0, "y": 439.0, "r": null},
+  {"x": 550.0, "y": 491.0, "r": null},
+  {"x": 632.0, "y": 500.0, "r": null},
+  {"x": 601.0, "y": 550.0, "r": null},
+  {"x": 583.0, "y": 605.0, "r": null}
+ ],
+ "ignore": []
+}

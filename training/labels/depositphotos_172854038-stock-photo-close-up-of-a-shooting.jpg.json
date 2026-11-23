@@ -1,0 +1,9 @@
+{
+ "image": "samples/depositphotos_172854038-stock-photo-close-up-of-a-shooting.jpg",
+ "width": 1600,
+ "height": 1700,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "exclude": "too dense (~150 overlapping holes), not labelled; used for visual testing only",
+ "holes": [],
+ "ignore": []
+}

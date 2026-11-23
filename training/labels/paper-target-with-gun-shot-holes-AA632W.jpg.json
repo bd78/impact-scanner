@@ -1,0 +1,9 @@
+{
+ "image": "samples/paper-target-with-gun-shot-holes-AA632W.jpg",
+ "width": 854,
+ "height": 1390,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "exclude": "too dense (~80 overlapping holes), not labelled",
+ "holes": [],
+ "ignore": []
+}

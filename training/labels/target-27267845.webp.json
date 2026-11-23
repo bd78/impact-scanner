@@ -1,0 +1,19 @@
+{
+ "image": "samples/target-27267845.webp",
+ "width": 800,
+ "height": 800,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 11.0,
+ "holes": [
+  {"x": 557.0, "y": 445.0, "r": null},
+  {"x": 539.0, "y": 480.0, "r": null},
+  {"x": 465.0, "y": 500.0, "r": null},
+  {"x": 497.0, "y": 536.0, "r": null},
+  {"x": 529.0, "y": 529.0, "r": null},
+  {"x": 566.0, "y": 541.0, "r": null},
+  {"x": 632.0, "y": 513.0, "r": null},
+  {"x": 567.0, "y": 595.0, "r": null},
+  {"x": 494.0, "y": 655.0, "r": null}
+ ],
+ "ignore": []
+}

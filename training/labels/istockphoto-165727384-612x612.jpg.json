@@ -1,0 +1,10 @@
+{
+ "image": "samples/istockphoto-165727384-612x612.jpg",
+ "width": 612,
+ "height": 612,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "holes": [
+  {"x": 294.0, "y": 301.0, "r": 28.0}
+ ],
+ "ignore": []
+}

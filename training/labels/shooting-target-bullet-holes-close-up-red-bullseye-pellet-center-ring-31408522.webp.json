@@ -1,0 +1,19 @@
+{
+ "image": "samples/shooting-target-bullet-holes-close-up-red-bullseye-pellet-center-ring-31408522.webp",
+ "width": 800,
+ "height": 534,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 13.0,
+ "holes": [
+  {"x": 127.0, "y": 138.0, "r": null},
+  {"x": 365.0, "y": 166.0, "r": null},
+  {"x": 262.0, "y": 188.0, "r": null},
+  {"x": 159.0, "y": 254.0, "r": null},
+  {"x": 233.0, "y": 240.0, "r": null},
+  {"x": 292.0, "y": 284.0, "r": null},
+  {"x": 143.0, "y": 306.0, "r": null},
+  {"x": 230.0, "y": 314.0, "r": null},
+  {"x": 305.0, "y": 433.0, "r": null}
+ ],
+ "ignore": []
+}

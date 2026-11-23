@@ -1,0 +1,14 @@
+{
+ "image": "samples/images.jfif",
+ "width": 447,
+ "height": 447,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 6.0,
+ "holes": [
+  {"x": 198.0, "y": 225.0, "r": null},
+  {"x": 203.0, "y": 242.0, "r": null},
+  {"x": 176.0, "y": 245.0, "r": null},
+  {"x": 257.0, "y": 210.0, "r": null}
+ ],
+ "ignore": []
+}

@@ -1,0 +1,24 @@
+{
+ "image": "samples/shooting-target-on-tree-trunk-with-bullet-holes-outdoor-shooting-range-with-paper-target-for-airgun-practice-rustic-texture-background-close-up-view-for-sport-and-accuracy-themes-photo.jfif",
+ "width": 552,
+ "height": 980,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 4.5,
+ "holes": [
+  {"x": 253.0, "y": 315.0, "r": null},
+  {"x": 215.0, "y": 329.0, "r": null},
+  {"x": 281.7, "y": 336.0, "r": null},
+  {"x": 243.7, "y": 354.5, "r": null},
+  {"x": 220.7, "y": 373.7, "r": null},
+  {"x": 195.0, "y": 388.0, "r": null},
+  {"x": 230.7, "y": 388.0, "r": null},
+  {"x": 253.2, "y": 403.7, "r": null},
+  {"x": 368.7, "y": 374.2, "r": null},
+  {"x": 209.2, "y": 418.0, "r": null},
+  {"x": 233.7, "y": 429.5, "r": null},
+  {"x": 240.0, "y": 466.2, "r": null}
+ ],
+ "ignore": [
+  [260, 300, 282, 328]
+ ]
+}

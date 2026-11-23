@@ -1,0 +1,21 @@
+{
+ "image": "samples/gun-target-bullet-holes-vector-illustration-success-shot-aim-78997474.webp",
+ "width": 800,
+ "height": 800,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 12.0,
+ "holes": [
+  {"x": 259.0, "y": 136.0, "r": null},
+  {"x": 392.0, "y": 203.0, "r": null},
+  {"x": 221.0, "y": 298.0, "r": null},
+  {"x": 346.0, "y": 287.0, "r": null},
+  {"x": 477.0, "y": 327.0, "r": null},
+  {"x": 582.0, "y": 339.0, "r": null},
+  {"x": 381.0, "y": 346.0, "r": null},
+  {"x": 392.0, "y": 381.0, "r": null},
+  {"x": 374.0, "y": 403.0, "r": null},
+  {"x": 96.0, "y": 412.0, "r": null},
+  {"x": 426.0, "y": 459.0, "r": null}
+ ],
+ "ignore": []
+}

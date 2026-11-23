@@ -1,0 +1,18 @@
+{
+ "image": "samples/human-target-bullet-holes-gun-firing-range-shaped-like-bull-s-eye-headshot-isolated-white-background-46951070.webp",
+ "width": 771,
+ "height": 900,
+ "source": "app export 2026-11-22",
+ "r_default": 1.8,
+ "holes": [
+  {"x": 323.7, "y": 471.2, "r": null},
+  {"x": 464.6, "y": 469.1, "r": null},
+  {"x": 449.3, "y": 545.4, "r": null},
+  {"x": 386.9, "y": 543.3, "r": null},
+  {"x": 371.6, "y": 568.3, "r": null},
+  {"x": 318.9, "y": 618.3, "r": null},
+  {"x": 454.2, "y": 686.3, "r": null},
+  {"x": 386.9, "y": 96.5, "r": null}
+ ],
+ "ignore": []
+}

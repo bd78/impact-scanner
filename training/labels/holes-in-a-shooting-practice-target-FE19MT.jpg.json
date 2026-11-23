@@ -1,0 +1,18 @@
+{
+ "image": "samples/holes-in-a-shooting-practice-target-FE19MT.jpg",
+ "width": 1300,
+ "height": 1303,
+ "source": "visual labelling (Claude), bootstrap; positions approximate",
+ "r_default": 10.0,
+ "holes": [
+  {"x": 630.0, "y": 565.0, "r": null},
+  {"x": 650.0, "y": 600.0, "r": null},
+  {"x": 670.0, "y": 610.0, "r": null},
+  {"x": 613.0, "y": 648.0, "r": null},
+  {"x": 650.0, "y": 645.0, "r": null},
+  {"x": 640.0, "y": 672.0, "r": null},
+  {"x": 660.0, "y": 690.0, "r": null},
+  {"x": 731.0, "y": 615.0, "r": null}
+ ],
+ "ignore": []
+}
