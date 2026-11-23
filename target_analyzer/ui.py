@@ -118,6 +118,7 @@ class App(tk.Tk):
         self.mode: str | None = None
         self.scale_points: list[tuple[float, float]] = []
         self.scale_line_px: float | None = None
+        self._cursor: tuple[int, int] | None = None  # last mouse position on the canvas (view px)
         self.px_per_mm: float | None = None
         self.impacts: list[Impact] = []
         self.groups: list[Group] = []
@@ -330,7 +331,7 @@ class App(tk.Tk):
 
         self.canvas.bind("<Configure>", lambda e: self.redraw())
         self.canvas.bind("<Motion>", self._on_motion)  # sampling disc under the cursor
-        self.canvas.bind("<Leave>", lambda e: self.canvas.delete("brush"))
+        self.canvas.bind("<Leave>", self._on_leave)
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.bind("<B1-Motion>", self._pan_move)
         self.canvas.bind("<ButtonRelease-1>", self._pan_end)
@@ -569,6 +570,7 @@ class App(tk.Tk):
         if self._pan_anchor is None or self.pil_image is None:
             return
         x, y, ox, oy = self._pan_anchor
+        self._cursor = (event.x, event.y)  # <Motion> does not fire while a button is held
         before = self.view_off
         self.view_off = (ox + event.x - x, oy + event.y - y)
         self._clamp_view()
@@ -633,6 +635,33 @@ class App(tk.Tk):
                    for i in members.get(gi, [])]
             self._draw_group_overlay(self.canvas, gi, g.label, circle, pts, gi == self.cur_group,
                                      self.style.impact_radius(self.zoom))
+        self._draw_scale_rubber()
+
+    def _draw_scale_rubber(self):
+        """While measuring the scale, a line from the 1st point to the cursor with its length."""
+        self.canvas.delete("rubber")
+        if self.mode != "scale" or len(self.scale_points) != 1 or self._cursor is None or self.pil_image is None:
+            return
+        vx, vy = self._cursor
+        x1, y1 = self._to_view(*self.scale_points[0])
+        ix, iy = self._to_image(vx, vy)
+        px = hypot(ix - self.scale_points[0][0], iy - self.scale_points[0][1])
+        text = f"{px:.0f} px"
+        if self.px_per_mm:
+            unit = self.var_unit.get()
+            text += f"  ≈ {to_unit(px / self.px_per_mm, unit):.2f} {unit}"
+        self.canvas.create_line(x1, y1, vx, vy, fill="black", width=4, tags="rubber")
+        self.canvas.create_line(x1, y1, vx, vy, fill="yellow", width=2, dash=(6, 4), tags="rubber")
+        # label beside the cursor, kept inside the canvas
+        cw, ch = self._canvas_wh()
+        tx, anchor = (vx + 14, "w") if vx + 180 < cw else (vx - 14, "e")
+        ty = vy - 14 if vy > 24 else vy + 14
+        t = self.canvas.create_text(tx, ty, text=text, anchor=anchor, fill="yellow",
+                                    font=("Segoe UI", 10, "bold"), tags="rubber")
+        bx0, by0, bx1, by1 = self.canvas.bbox(t)
+        bg = self.canvas.create_rectangle(bx0 - 4, by0 - 2, bx1 + 4, by1 + 2, fill="black",
+                                          outline="yellow", tags="rubber")
+        self.canvas.tag_lower(bg, t)
 
     def _line(self, key: str, gi: int) -> tuple[str, int, dict]:
         """Colour, width and extra canvas options (dash) of a drawing element."""
@@ -1200,11 +1229,17 @@ class App(tk.Tk):
             ttk.Label(self.swatch_bar, text=f"+{len(self.backing) - MAX_SWATCHES}").pack(side="left")
 
     def _on_motion(self, event):
+        self._cursor = (event.x, event.y)
+        self._draw_scale_rubber()
         self.canvas.delete("brush")
         if self.mode == "backing" and self.pil_image is not None:
             r = self._brush_radius()
             self.canvas.create_oval(event.x - r, event.y - r, event.x + r, event.y + r,
                                     outline="#ff00ff", width=2, tags="brush")
+
+    def _on_leave(self, _event=None):
+        self._cursor = None
+        self.canvas.delete("brush", "rubber")
 
     # ------------------------------------------------------ neural network
     def _model_info(self) -> str:

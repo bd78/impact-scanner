@@ -106,7 +106,10 @@ The app needs to know how many pixels make a centimetre. Two ways:
 1. Click **Measure 2 points**.
 2. Click two points on the photo whose real distance you know, for example the two
    edges of the black circle, or two ring lines, or a ruler laid on the target.
-   A yellow line joins the points.
+   After the first click, a dashed yellow line follows the mouse from that point, with
+   its length in pixels beside the cursor (and in cm or inch too when a scale is
+   already set, handy to check it). You can still zoom with the wheel and pan with the
+   right or middle button before the second click. A yellow line then joins the points.
 3. In the dialog, type the real distance and choose **cm** or **inch**.
 
 **Auto: from outer black circle**
