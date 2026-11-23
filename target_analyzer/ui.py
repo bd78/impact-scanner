@@ -20,6 +20,7 @@ from .detection import (BACKING_DEFAULT_TOL, BackingSample, Group, Impact, assig
                         backing_match_image, detect_impacts, find_disc, find_targets, sample_backing)
 from .drawstyle import (ELEMENTS, GROUP_COLOUR, IMPACT_SIZE_RANGE, LINE_STYLES, WIDTH_RANGE,
                         DrawStyle)
+from .export import excel_separators, export_rows, write_csv
 from .hole_model import MODEL_PATH, HoleNet, model_available
 from .images import HEIF_OK, load_image, resolve_image_path, source_name_of, store_image, stored_factor
 from .labels import IMAGES_DIR, label_path, save_label
@@ -366,6 +367,7 @@ class App(tk.Tk):
         ttk.Button(top, text="Average of all listed", command=lambda: self.compute_average(all_rows=True)).pack(side="left", padx=4)
         ttk.Button(top, text="Load record", command=self.load_record).pack(side="left", padx=4)
         ttk.Button(top, text="Delete selected", command=self.delete_records).pack(side="left", padx=4)
+        ttk.Button(top, text="Export to Excel (CSV)…", command=self.export_records).pack(side="left", padx=4)
 
         cols = ("id", "shot_date", "source_name", "weapon", "distance", "ammo", "n_groups", "n_shots",
                 "width", "height", "diameter", "notes")
@@ -1461,6 +1463,39 @@ class App(tk.Tk):
         self.nb.select(self.tab_analyze)
         self.lbl_status.config(text=f"Loaded record #{sid}: {len(self.groups)} group(s), "
                                     f"{len(self.impacts)} impacts.")
+
+    def export_records(self):
+        """Write the selected records (or all listed ones) to a CSV file for Excel, one row per group."""
+        selected, listed = self._selected_ids(), self._selected_ids(all_rows=True)
+        if not listed:
+            messagebox.showinfo("Export", "There is no record to export.")
+            return
+        ids = listed
+        if selected and len(selected) < len(listed):
+            answer = messagebox.askyesnocancel(
+                "Export", f"Export only the {len(selected)} selected record(s)?\n\n"
+                          f"No: export all {len(listed)} listed records.")
+            if answer is None:
+                return
+            ids = selected if answer else listed
+        ids = [i for i in listed if i in set(ids)]  # keep the order of the list
+        path = filedialog.asksaveasfilename(
+            title="Export records", defaultextension=".csv", filetypes=[("CSV for Excel", "*.csv")],
+            initialfile=f"impact-scanner-records-{date.today().isoformat()}.csv")
+        if not path:
+            return
+        unit = self.var_unit.get()
+        sep, dec = excel_separators()
+        sessions = self.db.sessions_by_id(ids)
+        rows = export_rows(sessions, {s["id"]: self.db.get_groups(s["id"]) for s in sessions},
+                           self.db.path, unit, dec)
+        try:
+            write_csv(path, rows, sep)
+        except OSError as exc:
+            messagebox.showerror("Export", f"Cannot write the file:\n{exc}")
+            return
+        self.lbl_avg.config(text=f"Exported {len(sessions)} record(s), {len(rows) - 1} group row(s), "
+                                 f"sizes in {unit}, to {path}")
 
     def delete_records(self):
         ids = self._selected_ids()

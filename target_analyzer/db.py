@@ -223,6 +223,11 @@ class Database:
         return self.conn.execute(
             "SELECT * FROM groups WHERE session_id = ? ORDER BY position, id", (sid,)).fetchall()
 
+    def sessions_by_id(self, ids: list[int]) -> list[sqlite3.Row]:
+        """The sessions with these ids, in the order given (unknown ids are skipped)."""
+        rows = [self.get_session(sid) for sid in ids]
+        return [r for r in rows if r is not None]
+
     def get_impacts(self, sid: int) -> list[sqlite3.Row]:
         return self.conn.execute(
             "SELECT * FROM impacts WHERE session_id = ? ORDER BY id", (sid,)).fetchall()
