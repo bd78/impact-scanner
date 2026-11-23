@@ -40,6 +40,7 @@ import random
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 from pathlib import Path
 
 import cv2
@@ -383,7 +384,21 @@ def split(photos: list[Photo], seed: int, frac: float = 0.2):
     return [p for p in photos if p.name not in names], val
 
 
+def model_out(path: Path) -> Path:
+    """The --out model file, checked: an absolute path ending in .onnx."""
+    path = Path(path).resolve()
+    if path.suffix.lower() != ".onnx":
+        raise SystemExit(f"--out must be an .onnx file, got {path}")
+    return path
+
+
+def sidecar_of(model_path: Path) -> Path:
+    """The metadata file written next to a model (hole_net.onnx -> hole_net.json)."""
+    return model_out(model_path).with_suffix(".json")
+
+
 def export(model: nn.Module, path: Path, meta: dict, check_photo: Photo, device: str) -> None:
+    path = model_out(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     model = model.float().eval().cpu()
     dummy = torch.zeros(1, 3, 320, 320)
@@ -393,7 +408,7 @@ def export(model: nn.Module, path: Path, meta: dict, check_photo: Photo, device:
         torch.onnx.export(model, dummy, str(path), dynamo=False, **kwargs)
     except TypeError:  # older PyTorch without the dynamo switch
         torch.onnx.export(model, dummy, str(path), **kwargs)
-    path.with_suffix(".json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
+    sidecar_of(path).write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     # the app runs the network with OpenCV: check it gives the same heat map
     from target_analyzer.hole_model import HoleNet
     net = HoleNet(path)
@@ -417,6 +432,19 @@ def folds_by_group(photos: list[Photo], k: int) -> list[list[Photo]]:
         folds[i] += groups[g]
         load[i] += sum(len(p.holes) + 2 for p in groups[g])
     return folds
+
+
+def updated_meta(old: object, threshold: float, validation: dict) -> dict:
+    """New model metadata with the cross-validation threshold and scores. It is rebuilt from
+    known, typed fields only, so nothing read from the old file is written back as is."""
+    if not isinstance(old, dict) or "norm_side" not in old:
+        raise SystemExit("not a hole-model metadata file; not updated")
+    meta = {"threshold": float(threshold), "norm_side": int(old["norm_side"]),
+            "stride": int(old.get("stride", STRIDE)),
+            "trained": date.fromisoformat(str(old.get("trained", date.today().isoformat()))).isoformat()}
+    meta.update({key: int(old[key]) for key in ("photos", "holes", "iters") if key in old})
+    meta["validation"] = validation
+    return meta
 
 
 def cross_validate(photos: list[Photo], k: int, iters: int, device: str, seed: int, meta_path: Path | None):
@@ -456,10 +484,9 @@ def cross_validate(photos: list[Photo], k: int, iters: int, device: str, seed: i
               "photos": rows}
     (ROOT / "training" / "report_cv.json").write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")
     if meta_path is not None:
-        mp = Path(meta_path).with_suffix(".json")
-        meta = json.loads(mp.read_text(encoding="utf-8"))
-        meta["threshold"] = best
-        meta["validation"] = dict(report["network"], method=f"{k}-fold cross-validation, {len(photos)} photos")
+        mp = sidecar_of(meta_path)
+        meta = updated_meta(json.loads(mp.read_text(encoding="utf-8")), best,
+                            dict(report["network"], method=f"{k}-fold cross-validation, {len(photos)} photos"))
         mp.write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
         print(f"updated {mp}: threshold {best}")
 
@@ -477,6 +504,7 @@ def main():
                     help="folder holding training/labels (the database folder of the app); default: the repository")
     ap.add_argument("--update-meta", action="store_true")
     args = ap.parse_args()
+    args.out = model_out(args.out)
 
     files = sorted((args.base / LABELS_DIR).glob("*.json"))
     photos = []
@@ -485,7 +513,12 @@ def main():
         if lab.get("exclude"):
             print(f"skip {Path(lab['image']).name}: {lab['exclude']}")
             continue
-        if not image_of(lab, args.base).is_file():
+        try:
+            img_path = image_of(lab, args.base)
+        except ValueError as exc:
+            print(f"skip {f.name}: {exc}")
+            continue
+        if not img_path.is_file():
             print(f"skip {Path(lab['image']).name}: photo not found")
             continue
         photos.append(Photo(f, args.base))

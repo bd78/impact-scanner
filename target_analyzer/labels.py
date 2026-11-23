@@ -5,7 +5,7 @@ One JSON file per photo in ``<base>/training/labels/`` (``<base>`` is the reposi
 or the folder of the database for a packaged app)::
 
     {
-      "image": "samples/1.jpg",          # relative to <base> (or absolute)
+      "image": "samples/1.jpg",          # relative to <base>, must stay inside it
       "width": 1440, "height": 1920,     # size of the photo the coordinates refer to
       "holes": [{"x": 965.0, "y": 747.0, "r": 20.0}, ...],   # centres, original pixels;
                                          # r = hole radius in px, null = use r_default
@@ -60,8 +60,13 @@ def save_label(path: Path, label: dict) -> None:
 
 
 def image_of(label: dict, base: Path) -> Path:
-    p = Path(label["image"])
-    return p if p.is_absolute() else Path(base) / p
+    """The photo of a label. Its ``image`` field comes from a file, so it must stay inside
+    ``base``: an absolute path or one that climbs out with ``..`` raises ValueError."""
+    base = Path(base).resolve()
+    p = (base / label["image"]).resolve()
+    if not p.is_relative_to(base):
+        raise ValueError(f"label image {label['image']!r} is outside {base}")
+    return p
 
 
 def hole_radius(label: dict, hole: dict) -> float:
