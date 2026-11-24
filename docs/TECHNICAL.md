@@ -662,7 +662,8 @@ the current impacts to `<db folder>/training/labels/<source name>.json` (format 
 1 % of the longest side). The image path is relative to the db folder; a photo outside
 it is copied to `<db folder>/training/images/` (a different file with the same name
 gets `_2`, `_3`, ...). A turned photo (`rotation` ≠ 0) is not the file on disk: it is
-written as shown to `training/images/<stem>_rot<degrees>.png` (`_label_photo`). With the default database the db folder is the repository, so
+written as shown to `training/images/<photo file name>_rot<degrees>.png` (e.g. `a.jpg_rot90.png`, so
+`a.jpg` and `a.png` do not share one; written to a `.tmp` file first, then swapped in) (`_label_photo`). With the default database the db folder is the repository, so
 the labels land in `training/labels/` next to the bundled ones; otherwise pass
 `--base <db folder>` to the training script.
 
