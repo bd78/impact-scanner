@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import filecmp
 import json
+import os
 import shutil
 import tkinter as tk
 from datetime import date
@@ -1362,7 +1363,8 @@ class App(tk.Tk):
         (lossless PNG), since the file on disk is not the picture the impacts refer to."""
         src = Path(self.image_path).resolve()
         if self.rotation:
-            dst = base / IMAGES_DIR / f"{Path(name).stem}_rot{self.rotation}.png"
+            # full file name, like the label (<name>.json): a.jpg and a.png get separate pictures
+            dst = base / IMAGES_DIR / f"{Path(name).name}_rot{self.rotation}.png"
         else:
             try:
                 return src.relative_to(base)
@@ -1374,11 +1376,16 @@ class App(tk.Tk):
                     k += 1
         try:
             dst.parent.mkdir(parents=True, exist_ok=True)
-            if self.rotation:  # replaces an earlier export of the same turn
+            if self.rotation:  # replaces an earlier export of the same turn, only once fully written
                 ok, buf = cv2.imencode(".png", self.image_bgr)
                 if not ok:
                     raise OSError("PNG encoding failed")
-                dst.write_bytes(buf.tobytes())
+                tmp = dst.with_name(dst.name + ".tmp")
+                try:
+                    tmp.write_bytes(buf.tobytes())
+                    os.replace(tmp, dst)
+                finally:
+                    tmp.unlink(missing_ok=True)
             elif not dst.exists():
                 shutil.copy2(src, dst)
         except OSError as exc:
