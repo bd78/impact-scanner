@@ -2,6 +2,12 @@
 
 A Python based *impacts detector* and grouping measurement tool for shooting sports enthusiasts.
 
+<img width="2552" height="1386" alt="image" src="https://github.com/user-attachments/assets/909a7e70-63b1-43a0-9efd-1195a10d3ace" />
+<img width="1508" height="956" alt="image" src="https://github.com/user-attachments/assets/8b9024be-d27e-4ada-922d-50dd3aaf266f" />
+<img width="1498" height="950" alt="image" src="https://github.com/user-attachments/assets/1de4f6aa-93c0-46c0-b502-061fc529fad9" />
+
+
+
 
 # Target impact analyser
 
