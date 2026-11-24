@@ -21,6 +21,7 @@ from .detection import (BACKING_DEFAULT_TOL, BackingSample, Group, Impact, assig
 from .drawstyle import (ELEMENTS, GROUP_COLOUR, IMPACT_SIZE_RANGE, LINE_STYLES, WIDTH_RANGE,
                         DrawStyle)
 from .export import excel_separators, export_rows, write_csv
+from .recordfilter import row_matches
 from .hole_model import MODEL_PATH, HoleNet, model_available
 from .images import HEIF_OK, load_image, resolve_image_path, source_name_of, store_image, stored_factor
 from .labels import IMAGES_DIR, label_path, save_label
@@ -41,6 +42,11 @@ BACKING_OVERLAY = (255, 0, 255)      # colour of the "matching pixels" overlay
 MAX_SWATCHES = 7                     # background samples shown as swatches (the rest as "+n")
 BACKING_WARN_SHARE = 0.2             # warn when one picked colour matches more of the photo than this
 # background colour of each tab name (full colour when selected, a light tint otherwise)
+# Records & averages filter: (sessions column, title, entry width); patterns: recordfilter.py
+RECORD_FILTERS = (("shot_date", "Date", 12), ("source_name", "Photo", 18), ("weapon", "Weapon", 14),
+                  ("distance", "Distance", 9), ("ammo", "Ammo", 14), ("n_groups", "Groups", 7),
+                  ("n_shots", "Shots", 7), ("notes", "Notes", 22))
+FILTER_SUGGEST = ("weapon", "distance", "ammo")  # offered as a drop-down of the saved values
 TAB_COLOURS = {"Analyse": "#2f6db3", "Records & averages": "#2e8b57", "Parameters": "#c96f1e"}
 TAB_TINT = 0.7  # share of white mixed into the colour of an unselected tab
 
@@ -357,17 +363,13 @@ class App(tk.Tk):
         root = self.tab_records
         top = ttk.Frame(root, padding=6)
         top.pack(fill="x")
-        ttk.Label(top, text="Weapon filter:").pack(side="left")
-        self.var_filter = tk.StringVar(value="")
-        self.cb_filter = ttk.Combobox(top, textvariable=self.var_filter, width=18)
-        self.cb_filter.pack(side="left", padx=4)
-        self.cb_filter.bind("<<ComboboxSelected>>", lambda e: self._refresh_records())
         ttk.Button(top, text="Refresh", command=self._refresh_records).pack(side="left", padx=4)
         ttk.Button(top, text="Average of selection", command=self.compute_average).pack(side="left", padx=4)
         ttk.Button(top, text="Average of all listed", command=lambda: self.compute_average(all_rows=True)).pack(side="left", padx=4)
         ttk.Button(top, text="Load record", command=self.load_record).pack(side="left", padx=4)
         ttk.Button(top, text="Delete selected", command=self.delete_records).pack(side="left", padx=4)
         ttk.Button(top, text="Export to Excel (CSV)…", command=self.export_records).pack(side="left", padx=4)
+        self._build_record_filter(root)
 
         cols = ("id", "shot_date", "source_name", "weapon", "distance", "ammo", "n_groups", "n_shots",
                 "width", "height", "diameter", "notes")
@@ -383,6 +385,49 @@ class App(tk.Tk):
                                             "Averages are taken over the groups of the selected records.",
                                  font=("Consolas", 10), justify="left", padding=6)
         self.lbl_avg.pack(fill="x")
+
+    def _build_record_filter(self, root):
+        """One pattern per column (see recordfilter.py); the list shows the rows matching all of them."""
+        box = ttk.LabelFrame(root, text="Filter  (*text* contains, text* starts with, ? one character, "
+                                        ">5  <=10  5..10  2026-11-01..2026-11-30, !pattern = not)", padding=(6, 2))
+        box.pack(fill="x", padx=6, pady=(0, 4))
+        self.filter_vars: dict[str, tk.StringVar] = {}
+        self._filter_combos: dict[str, ttk.Combobox] = {}
+        for c, (col, title, width) in enumerate(RECORD_FILTERS):
+            ttk.Label(box, text=title).grid(row=0, column=c, sticky="w", padx=2)
+            var = tk.StringVar(value="")
+            if col in FILTER_SUGGEST:  # editable list of the values in the database
+                w = ttk.Combobox(box, textvariable=var, width=width)
+                w.bind("<<ComboboxSelected>>", lambda e: self._refresh_records())
+                self._filter_combos[col] = w
+            else:
+                w = ttk.Entry(box, textvariable=var, width=width)
+            w.grid(row=1, column=c, sticky="ew", padx=2, pady=(0, 2))
+            w.bind("<Escape>", lambda e, v=var: v.set(""))
+            var.trace_add("write", lambda *_: self._schedule_filter())
+            self.filter_vars[col] = var
+            box.columnconfigure(c, weight=width)
+        btns = ttk.Frame(box)
+        btns.grid(row=0, column=len(RECORD_FILTERS), rowspan=2, padx=(8, 0))
+        ttk.Button(btns, text="Clear filter", command=self._clear_record_filter).grid(row=0, column=0, padx=2)
+        ttk.Button(btns, text="Select all listed",
+                   command=lambda: self.tree.selection_set(self.tree.get_children())).grid(row=0, column=1, padx=2)
+        ttk.Button(btns, text="Unselect all",
+                   command=lambda: self.tree.selection_set(())).grid(row=1, column=1, padx=2)
+        self.lbl_filter = ttk.Label(btns, text="")
+        self.lbl_filter.grid(row=1, column=0, padx=2)
+        self._filter_job = None
+
+    def _schedule_filter(self):
+        """Refilter shortly after the last key press (not on every character of a fast typist)."""
+        if self._filter_job is not None:
+            self.after_cancel(self._filter_job)
+        self._filter_job = self.after(250, self._refresh_records)
+
+    def _clear_record_filter(self):
+        for var in self.filter_vars.values():
+            var.set("")
+        self._refresh_records()
 
     # --------------------------------------------------------------- image
     def open_image(self):
@@ -1390,16 +1435,23 @@ class App(tk.Tk):
         self.lbl_status.config(text=msg)
 
     def _refresh_records(self):
-        weapons = self.db.weapons()
-        self.cb_filter["values"] = [""] + weapons
+        self._filter_job = None
+        rows = self.db.list_sessions()
+        for col, cb in self._filter_combos.items():
+            cb["values"] = sorted({str(r[col]) for r in rows if r[col]}, key=str.casefold)
+        patterns = {col: var.get() for col, var in self.filter_vars.items() if var.get().strip()}
+        kept = set(self.tree.selection())
         self.tree.delete(*self.tree.get_children())
         unit = self.var_unit.get()
-        for r in self.db.list_sessions(self.var_filter.get() or None):
+        shown = [r for r in rows if row_matches(dict(r), patterns)]
+        self.lbl_filter.config(text=f"{len(shown)} of {len(rows)} records" if patterns else f"{len(rows)} records")
+        for r in shown:
             self.tree.insert("", "end", iid=str(r["id"]), values=(
                 r["id"], r["shot_date"], r["source_name"] or "", r["weapon"], r["distance"], r["ammo"],
                 r["n_groups"], r["n_shots"],
                 f"{to_unit(r['width_mm'], unit):.2f} {unit}", f"{to_unit(r['height_mm'], unit):.2f} {unit}",
                 f"{to_unit(r['diameter_mm'], unit):.2f} {unit}", r["notes"]))
+        self.tree.selection_set([i for i in kept if self.tree.exists(i)])  # keep what is still listed
 
     def _selected_ids(self, all_rows=False) -> list[int]:
         items = self.tree.get_children() if all_rows else self.tree.selection()

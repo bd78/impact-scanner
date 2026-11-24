@@ -283,7 +283,27 @@ The second tab lists every saved record (one row per photo) with the original ph
 file name, its number of groups, total shots and the **mean** width, height and
 diameter of its groups, in the current display unit.
 
-- **Weapon filter**: show only one weapon. Leave empty for all.
+- **Filter**: one box per column (date, photo, weapon, distance, ammo, groups, shots,
+  notes). The list shows only the records that match **every** filled box; it updates
+  as you type. Upper and lower case are the same. *Weapon*, *Distance* and *Ammo* also
+  offer the saved values in a drop-down. Esc empties a box, **Clear filter** empties
+  them all, and the counter shows how many records are listed.
+
+  | You type | Matches |
+  |---|---|
+  | `Glock 17` | exactly `Glock 17` (no joker: the whole text) |
+  | `*luger*` | contains `luger` |
+  | `9mm*` / `*.jpg` | starts with `9mm` / ends with `.jpg` |
+  | `IMG_58?7*` | `?` is any single character |
+  | `25` | the number 25: `25`, `25.0`, `25 m` |
+  | `>20`, `>=25`, `<10`, `<=10`, `=7`, `<>7` | compares: as numbers when both are numbers, else as text |
+  | `5..10` | from 5 to 10 included |
+  | `2026-11*` / `2026-11-01..2026-11-30` / `>=2026-11-01` | dates of November 2026 / a date range / from a date on |
+  | `!*windy*` | NOT: the records whose notes do not contain `windy` |
+
+  Dates are compared as written (`YYYY-MM-DD` sorts correctly).
+- **Select all listed** / **Unselect all**: select every record the filter shows, or
+  none. A selection is kept when you change the filter, for the records still listed.
 - **Refresh**: reload the list (it also refreshes when you open the tab).
 - **Average of selection**: select one or more rows (Ctrl-click or Shift-click) and
   press the button. The box below shows, for width, height, diameter and shots per
@@ -294,7 +314,7 @@ diameter of its groups, in the current display unit.
   have a diameter at or below this value, which makes it a good "what I can count on"
   figure. Selecting one record gives the statistics of that photo's groups.
 - **Average of all listed**: the same over every row currently listed (so with a
-  weapon filter, the average for that weapon).
+  filter, for example on one weapon, the average for that weapon).
 - **Load record**: select exactly one row and reopen the stored photo copy with its
   groups, impacts, scale and form fields, for checking or re-measuring.
 - **Delete selected**: removes the selected records after confirmation, together with
@@ -303,7 +323,7 @@ diameter of its groups, in the current display unit.
 - **Export to Excel (CSV)…**: writes the records to a `.csv` file that Excel opens with a
   double-click. If some rows are selected, the app asks whether to export only those
   (**Yes**) or every listed row (**No**); with no selection, every listed row is
-  exported (so a weapon filter applies). The file has **one row per group** with these
+  exported (so the filter applies). The file has **one row per group** with these
   columns: record number, date (shot date, or the save date when it is empty), photo
   (full path of the stored copy in `images\`, the picture the measures refer to), photo
   name (the original file name), weapon, distance, ammo, group name, number of holes,

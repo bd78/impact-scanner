@@ -61,12 +61,13 @@ py-detect-impact/
     ├── db.py               SQLite persistence, aggregation, settings
     ├── images.py           stored photo copies in <db folder>/images/ (resize, JPEG, unique names, path resolution)
     ├── export.py           CSV export of records for Excel (one row per group) – no Tk, no SQLite
+    ├── recordfilter.py     filter patterns of the Records & averages list – pure Python
     ├── drawstyle.py        display style of impacts and groups (colours, line styles, widths) – pure Python
     └── ui.py               Tkinter application (the only module that imports the others)
 ```
 
 Dependency direction: `ui.py` → `detection.py`, `hole_model.py`, `labels.py`,
-`stats.py`, `db.py`, `images.py`, `export.py`, `drawstyle.py`. The lower modules do not
+`stats.py`, `db.py`, `images.py`, `export.py`, `recordfilter.py`, `drawstyle.py`. The lower modules do not
 import each other except `db.py` → `stats.py` (for `GroupStats`, `summarize_groups`),
 `db.py` → `images.py` (to delete orphaned copies and to derive source names during
 migration) and `export.py` → `stats.py` (`to_unit`).
@@ -619,7 +620,13 @@ and the labels), `save_record` (asks for confirmation when `sessions_with_source
 finds earlier records from the same file name; one `GroupRecord` per non-empty group,
 coordinates and circles scaled by `stored_factor`; passes a `store` callback so the copy
 is named with the new record id inside the save transaction), `_refresh_records` (the
-table has a *photo* column with `source_name`), `compute_average`
+table has a *photo* column with `source_name`; it lists the sessions for which
+`recordfilter.row_matches` accepts every non-empty pattern of the filter row
+`RECORD_FILTERS`, refreshed 250 ms after the last key press, and keeps the
+selection of the rows still listed; patterns: wildcards `* ?` through `fnmatchcase`
+on case-folded text, `> >= < <= = <> !=` and `a..b` compared as numbers when both
+sides start with a number that is not part of a date or time, else as text, a lone
+number compared numerically, `!` negates), `compute_average`
 (pooled group statistics: mean ± std and P90 in both cm and inch, independent of the
 display unit), `load_record` → `_load_record_id(sid)` (restores groups and impacts, mapping
 `group_id` to the group position; `open_image` also calls it, through
