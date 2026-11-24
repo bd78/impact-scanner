@@ -97,6 +97,15 @@ record: **Yes** reopens it with its scale, groups and shots (as **Load record** 
 section 5); **No** starts a new analysis of the photo. When several records exist for
 that name, the most recent one is offered; the others are in *Records & averages*.
 
+**Turn the photo.** If the photo is sideways or upside down, use **⟲ Rotate left** or
+**Rotate right ⟳** under the open button: each click turns it by 90°. You can turn it at
+any time, also after the analysis or after loading a record: the shots, the groups and
+their target circles, the scale points and the detected circle turn with the photo, and
+the scale is kept. Group **width** (horizontal) and **height** (vertical) are measured
+along the photo's edges, so they swap after a quarter turn; the diameter does not
+change. When you save, the photo copy is stored as it is shown (turned). The photo
+file itself is never modified.
+
 ### 4.2 Set the scale
 
 The app needs to know how many pixels make a centimetre. Two ways:

@@ -615,7 +615,13 @@ transpose and the optional `pillow_heif` opener, AVIF and WebP included; returns
 used by `tests/check_samples.py` and the training script), `analyze` (builds the
 hint, calls `detect_impacts`, takes `impacts` and `groups` from the result),
 `update_stats` (recomputes every `GroupStats`, the photo summary, fills the group table
-and the labels), `save_record` (asks for confirmation when `sessions_with_source`
+and the labels), `rotate_photo(clockwise)` (buttons *Rotate left / right*:
+`images.rotate_image` turns `image_bgr` with `cv2.rotate`, and `images.rotate_xy` moves
+every image coordinate the same way: impacts, group circle centres, `scale_points`,
+`disc`; pixel centres are integers, so clockwise is `(h-1-y, x)` and four turns give back
+the exact coordinates; radii, `px_per_mm` and the hole-colour samples are unchanged;
+`update_stats` then swaps width and height; `rotation` counts the degrees since the file
+was opened and is reset by `_load_image`), `save_record` (asks for confirmation when `sessions_with_source`
 finds earlier records from the same file name; one `GroupRecord` per non-empty group,
 coordinates and circles scaled by `stored_factor`; passes a `store` callback so the copy
 is named with the new record id inside the save transaction), `_refresh_records` (the
@@ -648,7 +654,8 @@ the current impacts to `<db folder>/training/labels/<source name>.json` (format 
 `r: null`, `r_default` from *Hole core Ø* × scale, else the last single-hole area, else
 1 % of the longest side). The image path is relative to the db folder; a photo outside
 it is copied to `<db folder>/training/images/` (a different file with the same name
-gets `_2`, `_3`, ...). With the default database the db folder is the repository, so
+gets `_2`, `_3`, ...). A turned photo (`rotation` ≠ 0) is not the file on disk: it is
+written as shown to `training/images/<stem>_rot<degrees>.png` (`_label_photo`). With the default database the db folder is the repository, so
 the labels land in `training/labels/` next to the bundled ones; otherwise pass
 `--base <db folder>` to the training script.
 

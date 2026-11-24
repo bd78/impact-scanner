@@ -22,7 +22,8 @@ from .drawstyle import (ELEMENTS, GROUP_COLOUR, IMPACT_SIZE_RANGE, LINE_STYLES, 
                         DrawStyle)
 from .export import excel_separators, export_rows, write_csv
 from .hole_model import MODEL_PATH, HoleNet, model_available
-from .images import HEIF_OK, load_image, resolve_image_path, source_name_of, store_image, stored_factor
+from .images import (HEIF_OK, load_image, resolve_image_path, rotate_image, rotate_xy, source_name_of,
+                     store_image, stored_factor)
 from .labels import IMAGES_DIR, label_path, save_label
 from .stats import GroupStats, cluster_points, from_unit, group_stats, summarize_groups, to_unit
 
@@ -124,6 +125,7 @@ class App(tk.Tk):
         self.groups: list[Group] = []
         self.cur_group: int | None = None
         self.disc = None
+        self.rotation = 0  # degrees the photo was turned since it was opened (0, 90, 180, 270)
         self.group_stats: dict[int, GroupStats] = {}  # group index -> stats (needs the scale)
         self.summary: dict = {}
         self.single_hole_area = 0.0  # from the last detection, original px
@@ -209,6 +211,12 @@ class App(tk.Tk):
 
         # --- left toolbar
         ttk.Button(left, text="1. Open image…", command=self.open_image).pack(fill="x", pady=2)
+        rot = ttk.Frame(left)
+        rot.pack(fill="x")
+        ttk.Button(rot, text="⟲ Rotate left", command=lambda: self.rotate_photo(False)).pack(
+            side="left", fill="x", expand=True, padx=(0, 1))
+        ttk.Button(rot, text="Rotate right ⟳", command=lambda: self.rotate_photo(True)).pack(
+            side="left", fill="x", expand=True, padx=(1, 0))
         ttk.Separator(left).pack(fill="x", pady=6)
         ttk.Label(left, text="2. Scale").pack(anchor="w")
         ttk.Button(left, text="Measure 2 points", command=lambda: self.set_mode("scale")).pack(fill="x", pady=2)
@@ -439,9 +447,39 @@ class App(tk.Tk):
         self.set_mode(None)
         self.lbl_scale.config(text="scale: not set", foreground="red")
         self.single_hole_area = 0.0
+        self.rotation = 0
         self.lbl_status.config(text=f"Loaded {Path(path).name} ({img.shape[1]}x{img.shape[0]} px)")
         self.update_stats()
         self._backing_changed()  # recomputes the overlay for this photo and redraws
+
+    def rotate_photo(self, clockwise: bool):
+        """Turn the photo by 90 degrees and move everything drawn on it along: impacts,
+        group circles, scale points, the detected disc. The scale is unchanged; group width
+        and height swap, as they are measured along the photo's axes."""
+        if self.image_bgr is None:
+            return
+        h, w = self.image_bgr.shape[:2]
+
+        def turn(x, y):
+            return rotate_xy(x, y, w, h, clockwise)
+
+        self.image_bgr = rotate_image(self.image_bgr, clockwise)
+        self.pil_image = Image.fromarray(cv2.cvtColor(self.image_bgr, cv2.COLOR_BGR2RGB))
+        for imp in self.impacts:
+            imp.x, imp.y = turn(imp.x, imp.y)
+        for g in self.groups:
+            if g.cx is not None:
+                g.cx, g.cy = turn(g.cx, g.cy)
+        self.scale_points = [turn(x, y) for x, y in self.scale_points]
+        if self.disc is not None:
+            self.disc.cx, self.disc.cy = turn(self.disc.cx, self.disc.cy)
+        self.rotation = (self.rotation + (90 if clockwise else -90)) % 360
+        self.zoom = 1.0  # the aspect ratio changed: fit the turned photo
+        self._view_size = None
+        self.update_stats()
+        self.lbl_status.config(text=f"Photo turned {'right' if clockwise else 'left'} "
+                                    f"({self.rotation}° from the file), now {h}x{w} px.")
+        self._backing_changed()  # recomputes the colour overlay for the turned photo and redraws
 
     # ---------------------------------------------------------- coordinates
     def _to_view(self, x, y):
@@ -1273,6 +1311,36 @@ class App(tk.Tk):
             self.var_detector.set(DETECTORS[0])
         self.db.set_setting(DETECTOR_SETTING, self.var_detector.get())
 
+    def _label_photo(self, base: Path, name: str) -> Path | None:
+        """Path, relative to base, of the photo a training label refers to. A photo outside
+        base is copied to <base>/training/images/; a turned photo is written there as shown
+        (lossless PNG), since the file on disk is not the picture the impacts refer to."""
+        src = Path(self.image_path).resolve()
+        if self.rotation:
+            dst = base / IMAGES_DIR / f"{Path(name).stem}_rot{self.rotation}.png"
+        else:
+            try:
+                return src.relative_to(base)
+            except ValueError:
+                dst = base / IMAGES_DIR / src.name
+                k = 2
+                while dst.exists() and not filecmp.cmp(dst, src, shallow=False):
+                    dst = dst.with_name(f"{src.stem}_{k}{src.suffix}")
+                    k += 1
+        try:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            if self.rotation:  # replaces an earlier export of the same turn
+                ok, buf = cv2.imencode(".png", self.image_bgr)
+                if not ok:
+                    raise OSError("PNG encoding failed")
+                dst.write_bytes(buf.tobytes())
+            elif not dst.exists():
+                shutil.copy2(src, dst)
+        except OSError as exc:
+            messagebox.showerror("Training label", f"Cannot copy the photo:\n{exc}")
+            return None
+        return dst.relative_to(base)
+
     def save_training_label(self):
         """Write the current impacts as a label for training/train_hole_model.py."""
         if self.image_bgr is None or not self.image_path:
@@ -1286,23 +1354,9 @@ class App(tk.Tk):
         path = label_path(base, name)
         if path.exists() and not messagebox.askyesno("Training label", f"{path.name} exists. Replace it?"):
             return
-        src = Path(self.image_path).resolve()
-        try:
-            rel = src.relative_to(base)
-        except ValueError:  # photo outside the data folder: keep a copy next to the labels
-            dst = base / IMAGES_DIR / src.name
-            k = 2
-            while dst.exists() and not filecmp.cmp(dst, src, shallow=False):
-                dst = dst.with_name(f"{src.stem}_{k}{src.suffix}")
-                k += 1
-            try:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                if not dst.exists():
-                    shutil.copy2(src, dst)
-            except OSError as exc:
-                messagebox.showerror("Training label", f"Cannot copy the photo:\n{exc}")
-                return
-            rel = dst.relative_to(base)
+        rel = self._label_photo(base, name)
+        if rel is None:
+            return
         h, w = self.image_bgr.shape[:2]
         if self.px_per_mm:
             try:
