@@ -45,6 +45,17 @@ def load_image(path: str | Path) -> np.ndarray | None:
         return None
 
 
+def rotate_image(image: np.ndarray, clockwise: bool) -> np.ndarray:
+    """The image turned by 90 degrees (exact pixel move, no resampling)."""
+    return cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE if clockwise else cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+
+def rotate_xy(x: float, y: float, w: int, h: int, clockwise: bool) -> tuple[float, float]:
+    """Where pixel coordinates (x, y) of a w x h image land after rotate_image.
+    Pixel centres are at integer coordinates, so 4 turns give back the same point."""
+    return ((h - 1) - y, x) if clockwise else (y, (w - 1) - x)
+
+
 def _safe_stem(name: str) -> str:
     stem = re.sub(r"[^A-Za-z0-9_-]+", "_", Path(name).stem).strip("_")
     return stem[:40] or "target"
